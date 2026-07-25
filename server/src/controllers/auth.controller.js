@@ -5,62 +5,6 @@ import User from "../models/User.model.js";
 import generateAccessAndRefreshTokens from "../services/auth.service.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
-const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
-
-  // validation
-  if ([firstName, lastName, email, password].some((field) => !field?.trim())) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  // check existing user
-  const Existinguser = await User.findOne({
-    email: email.toLowerCase().trim(),
-  });
-
-  if (Existinguser) {
-    throw new ApiError(400, "User already exists");
-  }
-
-  // create user
-
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password,
-  });
-
-  // generate tokens
-
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-    user._id,
-  );
-
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken",
-  );
-
-  if (!createdUser) {
-    throw new ApiError(500, "Failed to create user");
-  }
-
-  // return response
-
-  return res
-    .status(201)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", refreshToken, cookieOptions)
-    .json(
-      new ApiResponse(201, {
-        user: createdUser,
-        accessToken,
-        refreshToken,
-      }),
-      "User registered successfully",
-    );
-});
-
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -177,10 +121,4 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Access token refreshed successfully"));
 });
 
-export {
-  registerUser,
-  loginUser,
-  getCurrentUser,
-  logoutUser,
-  refreshAccessToken,
-};
+export { loginUser, getCurrentUser, logoutUser, refreshAccessToken };
