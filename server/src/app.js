@@ -25,9 +25,19 @@ app.get("/api/v1/healthCheck", (req, res) => {
 });
 
 import authRouter from "./routes/auth.routes.js";
+import userRouter from "./routes/user.routes.js";
+import superAdminRouter from "./routes/superAdmin.routes.js";
+import adminRouter from "./routes/admin.routes.js";
+import jobRouter from "./routes/job.routes.js";
+import candidateRouter from "./routes/candidate.routes.js";
+import resumeRouter from "./routes/resume.routes.js";
 
 app.use("/api/v1/auth", authRouter);
-
-
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/super-admin", superAdminRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/jobs", jobRouter);
+app.use("/api/v1/candidates", candidateRouter);
+app.use("/api/v1/resumes", resumeRouter);
 
 export default app;
