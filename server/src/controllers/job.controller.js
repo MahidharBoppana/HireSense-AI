@@ -2,6 +2,7 @@ import Job from "../models/Job.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import APIFeatures from "../utils/APIFeatures.js";
 
 const createJob = asyncHandler(async (req, res) => {
   const {
@@ -57,31 +58,18 @@ const createJob = asyncHandler(async (req, res) => {
 });
 
 const getJobs = asyncHandler(async (req, res) => {
-  let filter = {
-    isDeleted: false,
-  };
+  const features = new APIFeatures(
+    Job.find({
+      isDeleted: false,
+    }),
+    req.query,
+  )
+    .search(["title", "company", "department", "location"])
+    .filter()
+    .sort()
+    .paginate();
 
-  switch (req.user.role) {
-    case "recruiter":
-      filter.createdBy = req.user._id;
-      break;
-
-    case "hiring_manager":
-      filter.hiringManager = req.user._id;
-      break;
-
-    case "admin":
-    case "super_admin":
-      break;
-
-    default:
-      throw new ApiError(403, "Unauthorized");
-  }
-
-  const jobs = await Job.find(filter)
-    .populate("createdBy", "firstName lastName email")
-    .populate("hiringManager", "firstName lastName email")
-    .sort({ createdAt: -1 });
+  const jobs = await features.query;
 
   return res
     .status(200)

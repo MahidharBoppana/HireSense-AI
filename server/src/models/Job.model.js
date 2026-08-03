@@ -40,6 +40,20 @@ const jobSchema = new Schema(
       },
     ],
 
+    preferredEducation: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    keywords: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     experience: {
       min: {
         type: Number,

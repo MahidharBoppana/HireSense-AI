@@ -1,0 +1,10 @@
+const AI_WEIGHTS = {
+  SKILLS: 40,
+  EXPERIENCE: 25,
+  EDUCATION: 10,
+  PROJECTS: 10,
+  CERTIFICATIONS: 10,
+  KEYWORDS: 5,
+};
+
+export default AI_WEIGHTS;
