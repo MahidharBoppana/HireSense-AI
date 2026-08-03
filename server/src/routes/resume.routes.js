@@ -7,11 +7,10 @@ import { uploadResume } from "../controllers/resume.controller.js";
 const router = Router();
 
 router.post(
-  "/upload",
+  "/jobs/:jobId/resumes",
   authenticate,
   authorizeRoles("recruiter"),
   upload.single("resume"),
   uploadResume
 );
-
 export default router;

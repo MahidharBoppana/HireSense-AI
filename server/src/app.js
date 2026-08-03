@@ -31,6 +31,7 @@ import adminRouter from "./routes/admin.routes.js";
 import jobRouter from "./routes/job.routes.js";
 import candidateRouter from "./routes/candidate.routes.js";
 import resumeRouter from "./routes/resume.routes.js";
+import analyticsRouter from "./routes/analytics.routes.js";
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
@@ -39,5 +40,6 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/jobs", jobRouter);
 app.use("/api/v1/candidates", candidateRouter);
 app.use("/api/v1/resumes", resumeRouter);
+app.use("/api/v1/analytics", analyticsRouter);
 
 export default app;

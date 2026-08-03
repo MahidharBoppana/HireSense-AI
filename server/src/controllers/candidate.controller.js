@@ -1,13 +1,21 @@
 import Candidate from "../models/Candidate.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import APIFeatures from "../utils/APIFeatures.js";
 
 const getCandidates = asyncHandler(async (req, res) => {
-  const candidates = await Candidate.find({
-    isDeleted: false,
-  })
-    .select("-__v")
-    .sort({ createdAt: -1 });
+  const features = new APIFeatures(
+    Candidate.find({
+      isDeleted: false,
+    }),
+    req.query,
+  )
+    .search(["fullName", "email", "skills"])
+    .filter()
+    .sort()
+    .paginate();
+
+  const candidates = await features.query;
 
   return res
     .status(200)
