@@ -121,7 +121,6 @@ const candidateSchema = new Schema(
   },
 );
 
-candidateSchema.index({ email: 1 });
 candidateSchema.index({ skills: 1 });
 
 export default mongoose.model("Candidate", candidateSchema);
