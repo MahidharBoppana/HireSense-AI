@@ -4,6 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import User from "../models/User.model.js";
 import generateAccessAndRefreshTokens from "../services/auth.service.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
+import jwt from "jsonwebtoken";
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
