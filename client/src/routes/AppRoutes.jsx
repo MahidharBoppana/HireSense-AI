@@ -8,32 +8,67 @@ import RecruiterDashboard from "../pages/recruiter/Dashboard";
 import HiringManagerDashboard from "../pages/hiring-manager/Dashboard";
 
 import NotFound from "../pages/shared/NotFound";
+import Unauthorized from "../pages/shared/Unauthorized";
+
+import ProtectedRoute from "./ProtectedRoute";
+import DashboardLayout from "../layouts/DashboardLayout";
+
+import Admins from "../pages/super-admin/Admins";
 
 function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public */}
+
         <Route path="/" element={<Login />} />
 
-        <Route
-          path="/super-admin/dashboard"
-          element={<SuperAdminDashboard />}
-        />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-        <Route
-          path="/admin/dashboard"
-          element={<AdminDashboard />}
-        />
+        {/* Super Admin */}
 
-        <Route
-          path="/recruiter/dashboard"
-          element={<RecruiterDashboard />}
-        />
+        <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/super-admin/dashboard"
+              element={<SuperAdminDashboard />}
+            />
+          </Route>
 
-        <Route
-          path="/hiring-manager/dashboard"
-          element={<HiringManagerDashboard />}
-        />
+          <Route path="/super-admin/admins" element={<Admins />} />
+        </Route>
+
+        {/* Admin */}
+
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          </Route>
+        </Route>
+
+        {/* Recruiter */}
+
+        <Route element={<ProtectedRoute allowedRoles={["recruiter"]} />}>
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/recruiter/dashboard"
+              element={<RecruiterDashboard />}
+            />
+          </Route>
+        </Route>
+
+        {/* Hiring Manager */}
+
+        <Route element={<ProtectedRoute allowedRoles={["hiring_manager"]} />}>
+          <Route element={<DashboardLayout />}>
+            <Route
+              path="/hiring-manager/dashboard"
+              element={<HiringManagerDashboard />}
+            />
+          </Route>
+        </Route>
+
+        {/* 404 */}
 
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -1,12 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { getCurrentUser } from "../services/auth.service";
+import { getCurrentUser, logout as logoutUser } from "../services/auth.service";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
   const fetchCurrentUser = async () => {
@@ -21,6 +20,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const logout = async () => {
+    try {
+      await logoutUser();
+
+      setUser(null);
+    } catch (error) {
+      console.error("Logout failed:", error);
+
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchCurrentUser();
   }, []);
@@ -32,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         setUser,
         loading,
         fetchCurrentUser,
+        logout,
       }}
     >
       {children}
