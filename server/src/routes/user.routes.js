@@ -79,4 +79,72 @@ router.delete(
   deleteUser,
 );
 
+// Recruiter Management
+
+router.post(
+  "/recruiters",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  createUser,
+);
+
+router.get(
+  "/recruiters",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  getUsers,
+);
+
+router.get(
+  "/recruiters/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  getUserById,
+);
+
+router.patch(
+  "/recruiters/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  updateUser,
+);
+
+router.patch(
+  "/recruiters/:id/status",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  updateUserStatus,
+);
+
+router.delete(
+  "/recruiters/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "recruiter";
+    next();
+  },
+  deleteUser,
+);
+
 export default router;
