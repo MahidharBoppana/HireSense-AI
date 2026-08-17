@@ -21,6 +21,10 @@ function Sidebar() {
         name: "Recruiters",
         path: "/super-admin/recruiters",
       },
+      {
+        name: "Hiring Managers",
+        path: "/super-admin/hiring-managers",
+      },
     ],
 
     admin: [

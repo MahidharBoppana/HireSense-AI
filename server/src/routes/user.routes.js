@@ -147,4 +147,72 @@ router.delete(
   deleteUser,
 );
 
+// Hiring Manager Management
+
+router.post(
+  "/hiring-managers",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  createUser,
+);
+
+router.get(
+  "/hiring-managers",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  getUsers,
+);
+
+router.get(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  getUserById,
+);
+
+router.patch(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  updateUser,
+);
+
+router.patch(
+  "/hiring-managers/:id/status",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  updateUserStatus,
+);
+
+router.delete(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("super_admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  deleteUser,
+);
+
 export default router;

@@ -15,6 +15,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 import Admins from "../pages/super-admin/Admins";
 import Recruiters from "../pages/super-admin/Recruiters";
+import HiringManagers from "../pages/super-admin/HiringManagers";
 
 function AppRoutes() {
   return (
@@ -38,6 +39,11 @@ function AppRoutes() {
             <Route path="/super-admin/admins" element={<Admins />} />
 
             <Route path="/super-admin/recruiters" element={<Recruiters />} />
+            
+            <Route
+              path="/super-admin/hiring-managers"
+              element={<HiringManagers />}
+            />
           </Route>
         </Route>
 

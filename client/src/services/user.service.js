@@ -64,4 +64,45 @@ export const deleteRecruiter = async (recruiterId) => {
   return response.data;
 };
 
+export const getHiringManagers = async () => {
+  const response = await api.get("/users/hiring-managers");
 
+  return response.data;
+};
+
+export const createHiringManager = async (data) => {
+  const response = await api.post("/users/hiring-managers", data);
+
+  return response.data;
+};
+
+export const updateHiringManager = async ({ hiringManagerId, data }) => {
+  const response = await api.patch(
+    `/users/hiring-managers/${hiringManagerId}`,
+    data,
+  );
+
+  return response.data;
+};
+
+export const updateHiringManagerStatus = async ({
+  hiringManagerId,
+  isActive,
+}) => {
+  const response = await api.patch(
+    `/users/hiring-managers/${hiringManagerId}/status`,
+    {
+      isActive,
+    },
+  );
+
+  return response.data;
+};
+
+export const deleteHiringManager = async (hiringManagerId) => {
+  const response = await api.delete(
+    `/users/hiring-managers/${hiringManagerId}`,
+  );
+
+  return response.data;
+};
