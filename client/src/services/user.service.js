@@ -31,3 +31,37 @@ export const deleteAdmin = async (adminId) => {
 
   return response.data;
 };
+
+export const getRecruiters = async () => {
+  const response = await api.get("/users/recruiters");
+
+  return response.data;
+};
+
+export const createRecruiter = async (data) => {
+  const response = await api.post("/users/recruiters", data);
+
+  return response.data;
+};
+
+export const updateRecruiter = async ({ recruiterId, data }) => {
+  const response = await api.patch(`/users/recruiters/${recruiterId}`, data);
+
+  return response.data;
+};
+
+export const updateRecruiterStatus = async ({ recruiterId, isActive }) => {
+  const response = await api.patch(`/users/recruiters/${recruiterId}/status`, {
+    isActive,
+  });
+
+  return response.data;
+};
+
+export const deleteRecruiter = async (recruiterId) => {
+  const response = await api.delete(`/users/recruiters/${recruiterId}`);
+
+  return response.data;
+};
+
+

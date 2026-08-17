@@ -14,6 +14,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 
 import Admins from "../pages/super-admin/Admins";
+import Recruiters from "../pages/super-admin/Recruiters";
 
 function AppRoutes() {
   return (
@@ -33,9 +34,11 @@ function AppRoutes() {
               path="/super-admin/dashboard"
               element={<SuperAdminDashboard />}
             />
-          </Route>
 
-          <Route path="/super-admin/admins" element={<Admins />} />
+            <Route path="/super-admin/admins" element={<Admins />} />
+
+            <Route path="/super-admin/recruiters" element={<Recruiters />} />
+          </Route>
         </Route>
 
         {/* Admin */}
