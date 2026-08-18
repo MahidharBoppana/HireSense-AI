@@ -1,9 +1,12 @@
 import { Router } from "express";
+
 import authenticate from "../middleware/auth.middleware.js";
 import authorizeRoles from "../middleware/authorize.middleware.js";
+
 import {
   createUser,
   getUsers,
+  getActiveHiringManagers,
   getUserById,
   updateUser,
   updateUserStatus,
@@ -12,7 +15,13 @@ import {
 
 const router = Router();
 
-// Admin Management
+/*
+|--------------------------------------------------------------------------
+| Admin Management
+| Super Admin only
+|--------------------------------------------------------------------------
+*/
+
 router.post(
   "/admins",
   authenticate,
@@ -79,12 +88,17 @@ router.delete(
   deleteUser,
 );
 
-// Recruiter Management
+/*
+|--------------------------------------------------------------------------
+| Recruiter Management
+| Admin only
+|--------------------------------------------------------------------------
+*/
 
 router.post(
   "/recruiters",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -95,7 +109,7 @@ router.post(
 router.get(
   "/recruiters",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -106,7 +120,7 @@ router.get(
 router.get(
   "/recruiters/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -117,7 +131,7 @@ router.get(
 router.patch(
   "/recruiters/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -128,7 +142,7 @@ router.patch(
 router.patch(
   "/recruiters/:id/status",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -139,7 +153,7 @@ router.patch(
 router.delete(
   "/recruiters/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "recruiter";
     next();
@@ -147,12 +161,17 @@ router.delete(
   deleteUser,
 );
 
-// Hiring Manager Management
+/*
+|--------------------------------------------------------------------------
+| Hiring Manager Management
+| Admin only
+|--------------------------------------------------------------------------
+*/
 
 router.post(
   "/hiring-managers",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();
@@ -163,7 +182,7 @@ router.post(
 router.get(
   "/hiring-managers",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();
@@ -172,9 +191,16 @@ router.get(
 );
 
 router.get(
+  "/hiring-managers/active",
+  authenticate,
+  authorizeRoles("recruiter"),
+  getActiveHiringManagers,
+);
+
+router.get(
   "/hiring-managers/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();
@@ -185,7 +211,7 @@ router.get(
 router.patch(
   "/hiring-managers/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();
@@ -196,7 +222,7 @@ router.patch(
 router.patch(
   "/hiring-managers/:id/status",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();
@@ -207,7 +233,7 @@ router.patch(
 router.delete(
   "/hiring-managers/:id",
   authenticate,
-  authorizeRoles("super_admin"),
+  authorizeRoles("admin"),
   (req, res, next) => {
     req.role = "hiring_manager";
     next();

@@ -1,6 +1,6 @@
 import api from "../api/axios";
 
-export const getSuperAdminDashboard = async () => {
+export const getSuperAdminAnalytics = async () => {
   const response = await api.get("/analytics/super-admin");
 
   return response.data;

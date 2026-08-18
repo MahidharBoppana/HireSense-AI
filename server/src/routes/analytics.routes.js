@@ -4,7 +4,7 @@ import authenticate from "../middleware/auth.middleware.js";
 import authorizeRoles from "../middleware/authorize.middleware.js";
 
 import {
-  getSuperAdminDashboard,
+  getSuperAdminAnalytics,
   getAdminDashboard,
   getRecruiterDashboard,
   getHiringManagerDashboard,
@@ -16,7 +16,7 @@ router.get(
   "/super-admin",
   authenticate,
   authorizeRoles("super_admin"),
-  getSuperAdminDashboard,
+  getSuperAdminAnalytics,
 );
 
 router.get("/admin", authenticate, authorizeRoles("admin"), getAdminDashboard);

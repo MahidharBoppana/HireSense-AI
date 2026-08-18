@@ -13,21 +13,34 @@ import Unauthorized from "../pages/shared/Unauthorized";
 import ProtectedRoute from "./ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 
+// Super Admin
 import Admins from "../pages/super-admin/Admins";
-import Recruiters from "../pages/super-admin/Recruiters";
-import HiringManagers from "../pages/super-admin/HiringManagers";
+import Monitoring from "../pages/super-admin/Monitoring";
+
+// Admin
+import Recruiters from "../pages/admin/Recruiters";
+import HiringManagers from "../pages/admin/HiringManagers";
+
+import Jobs from "../pages/recruiter/Jobs";
+
+// Job Management will be moved to Recruiter later
+// import Jobs from "../pages/recruiter/Jobs";
 
 function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* =====================================================
+            Public Routes
+        ===================================================== */}
 
         <Route path="/" element={<Login />} />
 
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Super Admin */}
+        {/* =====================================================
+            Super Admin
+        ===================================================== */}
 
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>
           <Route element={<DashboardLayout />}>
@@ -38,24 +51,27 @@ function AppRoutes() {
 
             <Route path="/super-admin/admins" element={<Admins />} />
 
-            <Route path="/super-admin/recruiters" element={<Recruiters />} />
-            
-            <Route
-              path="/super-admin/hiring-managers"
-              element={<HiringManagers />}
-            />
+            <Route path="/super-admin/monitoring" element={<Monitoring />} />
           </Route>
         </Route>
 
-        {/* Admin */}
+        {/* =====================================================
+            Admin
+        ===================================================== */}
 
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+            <Route path="/admin/recruiters" element={<Recruiters />} />
+
+            <Route path="/admin/hiring-managers" element={<HiringManagers />} />
           </Route>
         </Route>
 
-        {/* Recruiter */}
+        {/* =====================================================
+            Recruiter
+        ===================================================== */}
 
         <Route element={<ProtectedRoute allowedRoles={["recruiter"]} />}>
           <Route element={<DashboardLayout />}>
@@ -63,10 +79,15 @@ function AppRoutes() {
               path="/recruiter/dashboard"
               element={<RecruiterDashboard />}
             />
+
+            {/* Job Management will be added here */}
+            <Route path="/recruiter/jobs" element={<Jobs />} />
           </Route>
         </Route>
 
-        {/* Hiring Manager */}
+        {/* =====================================================
+            Hiring Manager
+        ===================================================== */}
 
         <Route element={<ProtectedRoute allowedRoles={["hiring_manager"]} />}>
           <Route element={<DashboardLayout />}>
@@ -77,7 +98,9 @@ function AppRoutes() {
           </Route>
         </Route>
 
-        {/* 404 */}
+        {/* =====================================================
+            404
+        ===================================================== */}
 
         <Route path="*" element={<NotFound />} />
       </Routes>

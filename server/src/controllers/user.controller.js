@@ -60,6 +60,25 @@ const getUsers = asyncHandler(async (req, res) => {
     );
 });
 
+const getActiveHiringManagers = asyncHandler(async (req, res) => {
+  const hiringManagers = await User.find({
+    role: "hiring_manager",
+    isActive: true,
+  })
+    .select("_id firstName lastName email")
+    .sort({ firstName: 1, lastName: 1 });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        hiringManagers,
+        "Active hiring managers fetched successfully",
+      ),
+    );
+});
+
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -197,6 +216,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 export {
   createUser,
   getUsers,
+  getActiveHiringManagers,
   getUserById,
   updateUser,
   updateUserStatus,
