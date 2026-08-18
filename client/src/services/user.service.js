@@ -70,6 +70,12 @@ export const getHiringManagers = async () => {
   return response.data;
 };
 
+export const getActiveHiringManagers = async () => {
+  const response = await api.get("/users/hiring-managers/active");
+
+  return response.data;
+};
+
 export const createHiringManager = async (data) => {
   const response = await api.post("/users/hiring-managers", data);
 

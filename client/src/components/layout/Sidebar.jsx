@@ -18,12 +18,8 @@ function Sidebar() {
         path: "/super-admin/admins",
       },
       {
-        name: "Recruiters",
-        path: "/super-admin/recruiters",
-      },
-      {
-        name: "Hiring Managers",
-        path: "/super-admin/hiring-managers",
+        name: "Platform Monitoring",
+        path: "/super-admin/monitoring",
       },
     ],
 
@@ -32,12 +28,24 @@ function Sidebar() {
         name: "Dashboard",
         path: "/admin/dashboard",
       },
+      {
+        name: "Recruiters",
+        path: "/admin/recruiters",
+      },
+      {
+        name: "Hiring Managers",
+        path: "/admin/hiring-managers",
+      },
     ],
 
     recruiter: [
       {
         name: "Dashboard",
         path: "/recruiter/dashboard",
+      },
+      {
+        name: "Jobs",
+        path: "/recruiter/jobs",
       },
     ],
 

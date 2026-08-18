@@ -6,49 +6,139 @@ import Job from "../models/Job.model.js";
 import Candidate from "../models/Candidate.model.js";
 import Application from "../models/Application.model.js";
 
-const getSuperAdminDashboard = asyncHandler(async (req, res) => {
-  const [admins, recruiters, hiringManagers, jobs, candidates, applications] =
-    await Promise.all([
-      User.countDocuments({
-        role: "admin",
-        isActive: true,
-      }),
+const getSuperAdminAnalytics = asyncHandler(async (req, res) => {
+  const [
+    totalUsers,
+    activeUsers,
+    inactiveUsers,
 
-      User.countDocuments({
-        role: "recruiter",
-        isActive: true,
-      }),
+    admins,
+    recruiters,
+    hiringManagers,
 
-      User.countDocuments({
-        role: "hiring_manager",
-        isActive: true,
-      }),
+    totalJobs,
+    openJobs,
+    draftJobs,
+    closedJobs,
 
-      Job.countDocuments({
-        isDeleted: false,
-      }),
+    totalCandidates,
+    totalApplications,
 
-      Candidate.countDocuments({
-        isDeleted: false,
-      }),
+    screening,
+    shortlisted,
+    interview,
+    hired,
+    rejected,
+  ] = await Promise.all([
+    // Users
+    User.countDocuments({
+      role: { $ne: "super_admin" },
+    }),
 
-      Application.countDocuments(),
-    ]);
+    User.countDocuments({
+      role: { $ne: "super_admin" },
+      isActive: true,
+    }),
+
+    User.countDocuments({
+      role: { $ne: "super_admin" },
+      isActive: false,
+    }),
+
+    // User statistics
+    User.countDocuments({
+      role: "admin",
+    }),
+
+    User.countDocuments({
+      role: "recruiter",
+    }),
+
+    User.countDocuments({
+      role: "hiring_manager",
+    }),
+
+    // Recruitment statistics
+    Job.countDocuments({
+      isDeleted: false,
+    }),
+
+    Job.countDocuments({
+      status: "open",
+      isDeleted: false,
+    }),
+
+    Job.countDocuments({
+      status: "draft",
+      isDeleted: false,
+    }),
+
+    Job.countDocuments({
+      status: "closed",
+      isDeleted: false,
+    }),
+
+    Candidate.countDocuments({
+      isDeleted: false,
+    }),
+
+    Application.countDocuments(),
+
+    // Recruitment pipeline
+    Application.countDocuments({
+      status: "screening",
+    }),
+
+    Application.countDocuments({
+      status: "shortlisted",
+    }),
+
+    Application.countDocuments({
+      status: "interview",
+    }),
+
+    Application.countDocuments({
+      status: "hired",
+    }),
+
+    Application.countDocuments({
+      status: "rejected",
+    }),
+  ]);
 
   return res.status(200).json(
     new ApiResponse(
       200,
       {
-        users: {
+        userStatistics: {
+          totalUsers,
+          activeUsers,
+          inactiveUsers,
+
           admins,
           recruiters,
           hiringManagers,
         },
-        jobs,
-        candidates,
-        applications,
+
+        recruitmentStatistics: {
+          totalJobs,
+          openJobs,
+          draftJobs,
+          closedJobs,
+
+          totalCandidates,
+          totalApplications,
+        },
+
+        hiringPipeline: {
+          screening,
+          shortlisted,
+          interview,
+          hired,
+          rejected,
+        },
       },
-      "Super admin dashboard fetched successfully",
+      "Platform analytics fetched successfully",
     ),
   );
 });
@@ -252,4 +342,9 @@ const getHiringManagerDashboard = asyncHandler(async (req, res) => {
   );
 });
 
-export { getSuperAdminDashboard, getAdminDashboard, getRecruiterDashboard, getHiringManagerDashboard };
+export {
+  getSuperAdminAnalytics,
+  getAdminDashboard,
+  getRecruiterDashboard,
+  getHiringManagerDashboard,
+};

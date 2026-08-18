@@ -1,6 +1,10 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+
 import User from "../models/User.model.js";
+import Job from "../models/Job.model.js";
+import Candidate from "../models/Candidate.model.js";
+import Application from "../models/Application.model.js";
 
 const getDashboard = asyncHandler(async (req, res) => {
   const [
@@ -10,16 +14,47 @@ const getDashboard = asyncHandler(async (req, res) => {
     activeRecruiters,
     totalHiringManagers,
     activeHiringManagers,
+    totalJobs,
+    totalCandidates,
+    totalApplications,
     recentUsers,
   ] = await Promise.all([
-    User.countDocuments({ role: "admin" }),
-    User.countDocuments({ role: "admin", isActive: true }),
+    User.countDocuments({
+      role: "admin",
+    }),
 
-    User.countDocuments({ role: "recruiter" }),
-    User.countDocuments({ role: "recruiter", isActive: true }),
+    User.countDocuments({
+      role: "admin",
+      isActive: true,
+    }),
 
-    User.countDocuments({ role: "hiring_manager" }),
-    User.countDocuments({ role: "hiring_manager", isActive: true }),
+    User.countDocuments({
+      role: "recruiter",
+    }),
+
+    User.countDocuments({
+      role: "recruiter",
+      isActive: true,
+    }),
+
+    User.countDocuments({
+      role: "hiring_manager",
+    }),
+
+    User.countDocuments({
+      role: "hiring_manager",
+      isActive: true,
+    }),
+
+    Job.countDocuments({
+      isDeleted: false,
+    }),
+
+    Candidate.countDocuments({
+      isDeleted: false,
+    }),
+
+    Application.countDocuments(),
 
     User.find()
       .select("-password -refreshToken")
@@ -31,21 +66,29 @@ const getDashboard = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
-        totalAdmins,
-        activeAdmins,
-        inactiveAdmins: totalAdmins - activeAdmins,
+        users: {
+          totalAdmins,
+          activeAdmins,
+          inactiveAdmins: totalAdmins - activeAdmins,
 
-        totalRecruiters,
-        activeRecruiters,
-        inactiveRecruiters: totalRecruiters - activeRecruiters,
+          totalRecruiters,
+          activeRecruiters,
+          inactiveRecruiters: totalRecruiters - activeRecruiters,
 
-        totalHiringManagers,
-        activeHiringManagers,
-        inactiveHiringManagers: totalHiringManagers - activeHiringManagers,
+          totalHiringManagers,
+          activeHiringManagers,
+          inactiveHiringManagers: totalHiringManagers - activeHiringManagers,
+        },
+
+        recruitment: {
+          totalJobs,
+          totalCandidates,
+          totalApplications,
+        },
 
         recentUsers,
       },
-      "Dashboard fetched successfully",
+      "Super admin dashboard fetched successfully",
     ),
   );
 });

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getSuperAdminDashboard } from "../../services/analytics.service";
+import { getDashboard } from "../../services/superAdmin.service";
 
 function StatCard({ title, value, description }) {
   return (
@@ -22,7 +22,7 @@ function Dashboard() {
     error,
   } = useQuery({
     queryKey: ["super-admin-dashboard"],
-    queryFn: getSuperAdminDashboard,
+    queryFn: getDashboard,
   });
 
   if (isLoading) {
@@ -50,14 +50,13 @@ function Dashboard() {
 
   const dashboard = response?.data;
 
-  const admins = dashboard?.users?.admins ?? 0;
-  const recruiters = dashboard?.users?.recruiters ?? 0;
-  const hiringManagers = dashboard?.users?.hiringManagers ?? 0;
+  const admins = dashboard?.users?.activeAdmins ?? 0;
+  const recruiters = dashboard?.users?.activeRecruiters ?? 0;
+  const hiringManagers = dashboard?.users?.activeHiringManagers ?? 0;
 
-  const jobs = dashboard?.jobs ?? 0;
-  const candidates = dashboard?.candidates ?? 0;
-  const applications = dashboard?.applications ?? 0;
-
+  const jobs = dashboard?.recruitment?.totalJobs ?? 0;
+  const candidates = dashboard?.recruitment?.totalCandidates ?? 0;
+  const applications = dashboard?.recruitment?.totalApplications ?? 0;
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -77,21 +76,21 @@ function Dashboard() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
-            title="Active Admins"
-            value={admins}
-            description="Active administrator accounts"
+            title="Total Admins"
+            value={dashboard?.users?.totalAdmins ?? 0}
+            description="Total administrator accounts"
           />
 
           <StatCard
-            title="Active Recruiters"
-            value={recruiters}
-            description="Active recruiter accounts"
+            title="Total Recruiters"
+            value={dashboard?.users?.totalRecruiters ?? 0}
+            description="Total recruiter accounts"
           />
 
           <StatCard
-            title="Hiring Managers"
-            value={hiringManagers}
-            description="Active hiring managers"
+            title="Total Hiring Managers"
+            value={dashboard?.users?.totalHiringManagers ?? 0}
+            description="Total hiring manager accounts"
           />
         </div>
       </section>

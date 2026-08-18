@@ -69,7 +69,10 @@ const getJobs = asyncHandler(async (req, res) => {
     .sort()
     .paginate();
 
-  const jobs = await features.query;
+  const jobs = await features.query
+    .populate("createdBy", "firstName lastName email")
+    .populate("hiringManager", "firstName lastName email")
+    .populate("updatedBy", "firstName lastName email");
 
   return res
     .status(200)
