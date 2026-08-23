@@ -8,13 +8,13 @@ import {
   updateUser,
   updateUserStatus,
   deleteUser,
+  getActiveHiringManagers,
 } from "../controllers/user.controller.js";
 
 const router = Router();
 
 /* Recruiters */
 
-// Create
 router.post(
   "/recruiters",
   authenticate,
@@ -26,7 +26,6 @@ router.post(
   createUser,
 );
 
-// Get All
 router.get(
   "/recruiters",
   authenticate,
@@ -38,7 +37,6 @@ router.get(
   getUsers,
 );
 
-// Get By Id
 router.get(
   "/recruiters/:id",
   authenticate,
@@ -50,7 +48,6 @@ router.get(
   getUserById,
 );
 
-// Update
 router.patch(
   "/recruiters/:id",
   authenticate,
@@ -62,7 +59,6 @@ router.patch(
   updateUser,
 );
 
-// Update Status
 router.patch(
   "/recruiters/:id/status",
   authenticate,
@@ -74,7 +70,6 @@ router.patch(
   updateUserStatus,
 );
 
-// Delete
 router.delete(
   "/recruiters/:id",
   authenticate,
@@ -86,6 +81,84 @@ router.delete(
   deleteUser,
 );
 
+/*
+|--------------------------------------------------------------------------
+| Hiring Manager Management
+| Admin only
+|--------------------------------------------------------------------------
+*/
 
+router.post(
+  "/hiring-managers",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  createUser,
+);
+
+router.get(
+  "/hiring-managers",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  getUsers,
+);
+
+router.get(
+  "/hiring-managers/active",
+  authenticate,
+  authorizeRoles("recruiter"),
+  getActiveHiringManagers,
+);
+
+router.get(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  getUserById,
+);
+
+router.patch(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  updateUser,
+);
+
+router.patch(
+  "/hiring-managers/:id/status",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  updateUserStatus,
+);
+
+router.delete(
+  "/hiring-managers/:id",
+  authenticate,
+  authorizeRoles("admin"),
+  (req, res, next) => {
+    req.role = "hiring_manager";
+    next();
+  },
+  deleteUser,
+);
 
 export default router;

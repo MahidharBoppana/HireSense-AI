@@ -18,10 +18,24 @@ function Recruiters() {
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedRecruiter, setSelectedRecruiter] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedRecruiter, setSelectedRecruiter] = useState(null);
 
   const queryClient = useQueryClient();
+
+  // Get recruiters
+
+  const {
+    data: response,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["admin-recruiters"],
+    queryFn: getRecruiters,
+  });
+
+  // Create recruiter
 
   const createRecruiterMutation = useMutation({
     mutationFn: createRecruiter,
@@ -30,7 +44,7 @@ function Recruiters() {
       toast.success(response?.message || "Recruiter created successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["recruiters"],
+        queryKey: ["admin-recruiters"],
       });
 
       setIsCreateModalOpen(false);
@@ -43,6 +57,8 @@ function Recruiters() {
     },
   });
 
+  // Update recruiter
+
   const updateRecruiterMutation = useMutation({
     mutationFn: updateRecruiter,
 
@@ -50,7 +66,7 @@ function Recruiters() {
       toast.success(response?.message || "Recruiter updated successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["recruiters"],
+        queryKey: ["admin-recruiters"],
       });
 
       setIsEditModalOpen(false);
@@ -64,6 +80,8 @@ function Recruiters() {
     },
   });
 
+  // Update recruiter status
+
   const updateRecruiterStatusMutation = useMutation({
     mutationFn: updateRecruiterStatus,
 
@@ -73,7 +91,7 @@ function Recruiters() {
       );
 
       queryClient.invalidateQueries({
-        queryKey: ["recruiters"],
+        queryKey: ["admin-recruiters"],
       });
     },
 
@@ -84,6 +102,8 @@ function Recruiters() {
     },
   });
 
+  // Delete recruiter
+
   const deleteRecruiterMutation = useMutation({
     mutationFn: deleteRecruiter,
 
@@ -91,7 +111,7 @@ function Recruiters() {
       toast.success(response?.message || "Recruiter deleted successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["recruiters"],
+        queryKey: ["admin-recruiters"],
       });
 
       setIsDeleteModalOpen(false);
@@ -103,16 +123,6 @@ function Recruiters() {
         error?.response?.data?.message || "Failed to delete recruiter",
       );
     },
-  });
-
-  const {
-    data: response,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["recruiters"],
-    queryFn: getRecruiters,
   });
 
   if (isLoading) {
@@ -171,7 +181,7 @@ function Recruiters() {
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
+      {/* Header */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -198,72 +208,40 @@ function Recruiters() {
       {/* Statistics */}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Total */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Total Recruiters</p>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Total Recruiters</p>
-
-              <p className="mt-3 text-3xl font-bold text-white">
-                {recruiters.length}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/10 text-lg font-semibold text-indigo-400">
-              R
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-white">
+            {recruiters.length}
+          </p>
         </div>
 
-        {/* Active */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Active</p>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Active</p>
-
-              <p className="mt-3 text-3xl font-bold text-white">
-                {activeRecruiters}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-lg text-emerald-400">
-              ✓
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-emerald-400">
+            {activeRecruiters}
+          </p>
         </div>
 
-        {/* Inactive */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Inactive</p>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Inactive</p>
-
-              <p className="mt-3 text-3xl font-bold text-white">
-                {inactiveRecruiters}
-              </p>
-            </div>
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 text-lg text-red-400">
-              !
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-red-400">
+            {inactiveRecruiters}
+          </p>
         </div>
       </div>
 
       {/* Recruiter Table */}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-sm">
-        {/* Table Header */}
-
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         <div className="flex flex-col gap-4 border-b border-slate-800 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold text-white">Recruiter Accounts</h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              All recruiters registered in the system.
+              All recruiters managed by administrators.
             </p>
           </div>
 
@@ -275,8 +253,6 @@ function Recruiters() {
             className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 sm:w-64"
           />
         </div>
-
-        {/* Table */}
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[750px] text-left">
@@ -310,8 +286,6 @@ function Recruiters() {
                   key={recruiter._id}
                   className="transition hover:bg-slate-800/40"
                 >
-                  {/* Recruiter */}
-
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 font-semibold text-indigo-400">
@@ -328,13 +302,9 @@ function Recruiters() {
                     </div>
                   </td>
 
-                  {/* Email */}
-
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {recruiter.email}
                   </td>
-
-                  {/* Status */}
 
                   <td className="px-6 py-4">
                     <span
@@ -354,15 +324,11 @@ function Recruiters() {
                     </span>
                   </td>
 
-                  {/* Created */}
-
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {recruiter.createdAt
                       ? new Date(recruiter.createdAt).toLocaleDateString()
                       : "-"}
                   </td>
-
-                  {/* Actions */}
 
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
@@ -414,15 +380,9 @@ function Recruiters() {
           </table>
         </div>
 
-        {/* Empty State */}
-
         {filteredRecruiters.length === 0 && (
           <div className="px-6 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-xl text-slate-500">
-              R
-            </div>
-
-            <h3 className="mt-4 font-semibold text-white">
+            <h3 className="font-semibold text-white">
               {search ? "No recruiters found" : "No recruiters yet"}
             </h3>
 
@@ -434,12 +394,16 @@ function Recruiters() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+
       <CreateRecruiterModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={(data) => createRecruiterMutation.mutate(data)}
         isSubmitting={createRecruiterMutation.isPending}
       />
+
       <EditRecruiterModal
         isOpen={isEditModalOpen}
         onClose={() => {
@@ -455,6 +419,7 @@ function Recruiters() {
         }
         isSubmitting={updateRecruiterMutation.isPending}
       />
+
       <DeleteRecruiterModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
@@ -462,9 +427,7 @@ function Recruiters() {
           setSelectedRecruiter(null);
         }}
         recruiter={selectedRecruiter}
-        onConfirm={() => {
-          deleteRecruiterMutation.mutate(selectedRecruiter._id);
-        }}
+        onConfirm={() => deleteRecruiterMutation.mutate(selectedRecruiter._id)}
         isDeleting={deleteRecruiterMutation.isPending}
       />
     </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 import {
   getHiringManagers,
@@ -13,17 +14,28 @@ import CreateHiringManagerModal from "../../components/modals/CreateHiringManage
 import EditHiringManagerModal from "../../components/modals/EditHiringManagerModal";
 import DeleteHiringManagerModal from "../../components/modals/DeleteHiringManagerModal";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-
 function HiringManagers() {
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedHiringManager, setSelectedHiringManager] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedHiringManager, setSelectedHiringManager] = useState(null);
 
   const queryClient = useQueryClient();
+
+  // Get hiring managers
+
+  const {
+    data: response,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["admin-hiring-managers"],
+    queryFn: getHiringManagers,
+  });
+
+  // Create hiring manager
 
   const createHiringManagerMutation = useMutation({
     mutationFn: createHiringManager,
@@ -32,7 +44,7 @@ function HiringManagers() {
       toast.success(response?.message || "Hiring manager created successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["hiringManagers"],
+        queryKey: ["admin-hiring-managers"],
       });
 
       setIsCreateModalOpen(false);
@@ -45,6 +57,8 @@ function HiringManagers() {
     },
   });
 
+  // Update hiring manager
+
   const updateHiringManagerMutation = useMutation({
     mutationFn: updateHiringManager,
 
@@ -52,7 +66,7 @@ function HiringManagers() {
       toast.success(response?.message || "Hiring manager updated successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["hiringManagers"],
+        queryKey: ["admin-hiring-managers"],
       });
 
       setIsEditModalOpen(false);
@@ -66,6 +80,8 @@ function HiringManagers() {
     },
   });
 
+  // Update status
+
   const updateHiringManagerStatusMutation = useMutation({
     mutationFn: updateHiringManagerStatus,
 
@@ -75,7 +91,7 @@ function HiringManagers() {
       );
 
       queryClient.invalidateQueries({
-        queryKey: ["hiringManagers"],
+        queryKey: ["admin-hiring-managers"],
       });
     },
 
@@ -87,6 +103,8 @@ function HiringManagers() {
     },
   });
 
+  // Delete hiring manager
+
   const deleteHiringManagerMutation = useMutation({
     mutationFn: deleteHiringManager,
 
@@ -94,7 +112,7 @@ function HiringManagers() {
       toast.success(response?.message || "Hiring manager deleted successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["hiringManagers"],
+        queryKey: ["admin-hiring-managers"],
       });
 
       setIsDeleteModalOpen(false);
@@ -108,15 +126,7 @@ function HiringManagers() {
     },
   });
 
-  const {
-    data: response,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["hiringManagers"],
-    queryFn: getHiringManagers,
-  });
+  // Loading
 
   if (isLoading) {
     return (
@@ -133,6 +143,8 @@ function HiringManagers() {
       </div>
     );
   }
+
+  // Error
 
   if (isError) {
     return (
@@ -166,9 +178,8 @@ function HiringManagers() {
       return true;
     }
 
-    const fullName = `${manager.firstName || ""} ${
-      manager.lastName || ""
-    }`.toLowerCase();
+    const fullName =
+      `${manager.firstName || ""} ${manager.lastName || ""}`.toLowerCase();
 
     const email = manager.email?.toLowerCase() || "";
 
@@ -204,58 +215,42 @@ function HiringManagers() {
       {/* Statistics */}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Total Hiring Managers</p>
+        {/* Total */}
 
-              <p className="mt-3 text-3xl font-bold text-white">
-                {hiringManagers.length}
-              </p>
-            </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Total Hiring Managers</p>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500/10 text-lg font-semibold text-indigo-400">
-              H
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-white">
+            {hiringManagers.length}
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Active</p>
+        {/* Active */}
 
-              <p className="mt-3 text-3xl font-bold text-white">
-                {activeHiringManagers}
-              </p>
-            </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Active</p>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-lg text-emerald-400">
-              ✓
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-emerald-400">
+            {activeHiringManagers}
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Inactive</p>
+        {/* Inactive */}
 
-              <p className="mt-3 text-3xl font-bold text-white">
-                {inactiveHiringManagers}
-              </p>
-            </div>
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <p className="text-sm text-slate-400">Inactive</p>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 text-lg text-red-400">
-              !
-            </div>
-          </div>
+          <p className="mt-3 text-3xl font-bold text-red-400">
+            {inactiveHiringManagers}
+          </p>
         </div>
       </div>
 
       {/* Table */}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        {/* Table Header */}
+
         <div className="flex flex-col gap-4 border-b border-slate-800 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold text-white">
@@ -263,7 +258,7 @@ function HiringManagers() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              All hiring managers registered in the system.
+              All hiring managers managed by administrators.
             </p>
           </div>
 
@@ -275,6 +270,8 @@ function HiringManagers() {
             className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 sm:w-64"
           />
         </div>
+
+        {/* Table */}
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] text-left">
@@ -308,6 +305,8 @@ function HiringManagers() {
                   key={manager._id}
                   className="transition hover:bg-slate-800/40"
                 >
+                  {/* Hiring Manager */}
+
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 font-semibold text-indigo-400">
@@ -324,9 +323,13 @@ function HiringManagers() {
                     </div>
                   </td>
 
+                  {/* Email */}
+
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {manager.email}
                   </td>
+
+                  {/* Status */}
 
                   <td className="px-6 py-4">
                     <span
@@ -346,14 +349,20 @@ function HiringManagers() {
                     </span>
                   </td>
 
+                  {/* Created */}
+
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {manager.createdAt
                       ? new Date(manager.createdAt).toLocaleDateString()
                       : "-"}
                   </td>
 
+                  {/* Actions */}
+
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
+                      {/* Edit */}
+
                       <button
                         onClick={() => {
                           setSelectedHiringManager(manager);
@@ -363,6 +372,8 @@ function HiringManagers() {
                       >
                         Edit
                       </button>
+
+                      {/* Activate / Deactivate */}
 
                       <button
                         onClick={() =>
@@ -385,6 +396,8 @@ function HiringManagers() {
                             : "Activate"}
                       </button>
 
+                      {/* Delete */}
+
                       <button
                         onClick={() => {
                           setSelectedHiringManager(manager);
@@ -402,13 +415,11 @@ function HiringManagers() {
           </table>
         </div>
 
+        {/* Empty State */}
+
         {filteredHiringManagers.length === 0 && (
           <div className="px-6 py-16 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-xl text-slate-500">
-              H
-            </div>
-
-            <h3 className="mt-4 font-semibold text-white">
+            <h3 className="font-semibold text-white">
               {search ? "No hiring managers found" : "No hiring managers yet"}
             </h3>
 
@@ -420,12 +431,16 @@ function HiringManagers() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+
       <CreateHiringManagerModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={(data) => createHiringManagerMutation.mutate(data)}
         isSubmitting={createHiringManagerMutation.isPending}
       />
+
       <EditHiringManagerModal
         isOpen={isEditModalOpen}
         onClose={() => {
@@ -441,6 +456,7 @@ function HiringManagers() {
         }
         isSubmitting={updateHiringManagerMutation.isPending}
       />
+
       <DeleteHiringManagerModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
@@ -448,9 +464,9 @@ function HiringManagers() {
           setSelectedHiringManager(null);
         }}
         hiringManager={selectedHiringManager}
-        onConfirm={() => {
-          deleteHiringManagerMutation.mutate(selectedHiringManager._id);
-        }}
+        onConfirm={() =>
+          deleteHiringManagerMutation.mutate(selectedHiringManager._id)
+        }
         isDeleting={deleteHiringManagerMutation.isPending}
       />
     </div>
