@@ -149,6 +149,7 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
     hiringManagers,
     activeJobs,
     totalApplications,
+    screening,
     shortlisted,
     interview,
     hired,
@@ -186,6 +187,10 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
     Application.countDocuments({
       status: "rejected",
     }),
+
+    Application.countDocuments({
+      status: "screening",
+    }),
   ]);
 
   return res.status(200).json(
@@ -198,6 +203,7 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
         totalApplications,
 
         hiringPipeline: {
+          screening,
           shortlisted,
           interview,
           hired,

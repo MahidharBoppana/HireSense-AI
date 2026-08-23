@@ -1,5 +1,7 @@
 import api from "../api/axios";
 
+// Admin API's
+
 export const getAdmins = async () => {
   const response = await api.get("/users/admins");
 
@@ -32,26 +34,28 @@ export const deleteAdmin = async (adminId) => {
   return response.data;
 };
 
+// Recruiter API's
+
 export const getRecruiters = async () => {
-  const response = await api.get("/users/recruiters");
+  const response = await api.get("/admin/recruiters");
 
   return response.data;
 };
 
 export const createRecruiter = async (data) => {
-  const response = await api.post("/users/recruiters", data);
+  const response = await api.post("/admin/recruiters", data);
 
   return response.data;
 };
 
 export const updateRecruiter = async ({ recruiterId, data }) => {
-  const response = await api.patch(`/users/recruiters/${recruiterId}`, data);
+  const response = await api.patch(`/admin/recruiters/${recruiterId}`, data);
 
   return response.data;
 };
 
 export const updateRecruiterStatus = async ({ recruiterId, isActive }) => {
-  const response = await api.patch(`/users/recruiters/${recruiterId}/status`, {
+  const response = await api.patch(`/admin/recruiters/${recruiterId}/status`, {
     isActive,
   });
 
@@ -59,32 +63,28 @@ export const updateRecruiterStatus = async ({ recruiterId, isActive }) => {
 };
 
 export const deleteRecruiter = async (recruiterId) => {
-  const response = await api.delete(`/users/recruiters/${recruiterId}`);
+  const response = await api.delete(`/admin/recruiters/${recruiterId}`);
 
   return response.data;
 };
+
+// Hiring Manager API's
 
 export const getHiringManagers = async () => {
-  const response = await api.get("/users/hiring-managers");
-
-  return response.data;
-};
-
-export const getActiveHiringManagers = async () => {
-  const response = await api.get("/users/hiring-managers/active");
+  const response = await api.get("/admin/hiring-managers");
 
   return response.data;
 };
 
 export const createHiringManager = async (data) => {
-  const response = await api.post("/users/hiring-managers", data);
+  const response = await api.post("/admin/hiring-managers", data);
 
   return response.data;
 };
 
 export const updateHiringManager = async ({ hiringManagerId, data }) => {
   const response = await api.patch(
-    `/users/hiring-managers/${hiringManagerId}`,
+    `/admin/hiring-managers/${hiringManagerId}`,
     data,
   );
 
@@ -96,7 +96,7 @@ export const updateHiringManagerStatus = async ({
   isActive,
 }) => {
   const response = await api.patch(
-    `/users/hiring-managers/${hiringManagerId}/status`,
+    `/admin/hiring-managers/${hiringManagerId}/status`,
     {
       isActive,
     },
@@ -107,7 +107,7 @@ export const updateHiringManagerStatus = async ({
 
 export const deleteHiringManager = async (hiringManagerId) => {
   const response = await api.delete(
-    `/users/hiring-managers/${hiringManagerId}`,
+    `/admin/hiring-managers/${hiringManagerId}`,
   );
 
   return response.data;
