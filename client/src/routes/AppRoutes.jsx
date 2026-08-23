@@ -21,10 +21,9 @@ import Monitoring from "../pages/super-admin/Monitoring";
 import Recruiters from "../pages/admin/Recruiters";
 import HiringManagers from "../pages/admin/HiringManagers";
 
-import Jobs from "../pages/recruiter/Jobs";
-
-// Job Management will be moved to Recruiter later
-// import Jobs from "../pages/recruiter/Jobs";
+// Recruiter
+import RecruiterJobs from "../pages/recruiter/Jobs";
+import RecruiterJobDetails from "../pages/recruiter/JobDetails";
 
 function AppRoutes() {
   return (
@@ -73,6 +72,8 @@ function AppRoutes() {
             Recruiter
         ===================================================== */}
 
+        {/* Recruiter */}
+
         <Route element={<ProtectedRoute allowedRoles={["recruiter"]} />}>
           <Route element={<DashboardLayout />}>
             <Route
@@ -80,8 +81,12 @@ function AppRoutes() {
               element={<RecruiterDashboard />}
             />
 
-            {/* Job Management will be added here */}
-            <Route path="/recruiter/jobs" element={<Jobs />} />
+            <Route path="/recruiter/jobs" element={<RecruiterJobs />} />
+
+            <Route
+              path="/recruiter/jobs/:id"
+              element={<RecruiterJobDetails />}
+            />
           </Route>
         </Route>
 

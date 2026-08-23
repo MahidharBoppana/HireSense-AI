@@ -58,12 +58,28 @@ const createJob = asyncHandler(async (req, res) => {
 });
 
 const getJobs = asyncHandler(async (req, res) => {
-  const features = new APIFeatures(
-    Job.find({
-      isDeleted: false,
-    }),
-    req.query,
-  )
+  const filter = {
+    isDeleted: false,
+  };
+
+  switch (req.user.role) {
+    case "recruiter":
+      filter.createdBy = req.user._id;
+      break;
+
+    case "hiring_manager":
+      filter.hiringManager = req.user._id;
+      break;
+
+    case "admin":
+    case "super_admin":
+      break;
+
+    default:
+      throw new ApiError(403, "Unauthorized");
+  }
+
+  const features = new APIFeatures(Job.find(filter), req.query)
     .search(["title", "company", "department", "location"])
     .filter()
     .sort()
