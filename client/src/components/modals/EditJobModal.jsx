@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const createJobSchema = z
+const editJobSchema = z
   .object({
     title: z.string().trim().min(2, "Job title must be at least 2 characters"),
 
@@ -72,10 +72,11 @@ const createJobSchema = z
     }
   });
 
-function CreateJobModal({
+function EditJobModal({
   isOpen,
   onClose,
   onSubmit,
+  job,
   hiringManagers = [],
   isSubmitting,
 }) {
@@ -85,7 +86,7 @@ function CreateJobModal({
     reset,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(createJobSchema),
+    resolver: zodResolver(editJobSchema),
 
     defaultValues: {
       title: "",
@@ -106,44 +107,75 @@ function CreateJobModal({
     },
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      reset({
-        title: "",
-        company: "",
-        department: "",
-        description: "",
-        requiredSkills: "",
-        preferredSkills: "",
-        minExperience: 0,
-        maxExperience: 0,
-        salaryMin: 0,
-        salaryMax: 0,
-        currency: "INR",
-        location: "",
-        employmentType: "full_time",
-        hiringManager: "",
-        status: "draft",
-      });
-    }
-  }, [isOpen, reset]);
+  /*
+   * Load existing job data into the form
+   */
 
-  if (!isOpen) {
-    return null;
-  }
+  useEffect(() => {
+    if (!isOpen || !job) {
+      return;
+    }
+
+    reset({
+      title: job.title || "",
+
+      company: job.company || "",
+
+      department: job.department || "",
+
+      description: job.description || "",
+
+      requiredSkills: Array.isArray(job.requiredSkills)
+        ? job.requiredSkills.join(", ")
+        : "",
+
+      preferredSkills: Array.isArray(job.preferredSkills)
+        ? job.preferredSkills.join(", ")
+        : "",
+
+      minExperience: job.experience?.min ?? 0,
+
+      maxExperience: job.experience?.max ?? 0,
+
+      salaryMin: job.salary?.min ?? 0,
+
+      salaryMax: job.salary?.max ?? 0,
+
+      currency: job.salary?.currency || "INR",
+
+      location: job.location || "",
+
+      employmentType: job.employmentType || "full_time",
+
+      hiringManager:
+        typeof job.hiringManager === "object"
+          ? job.hiringManager?._id || ""
+          : job.hiringManager || "",
+
+      status: job.status || "draft",
+    });
+  }, [isOpen, job, reset]);
+
+  /*
+   * Close modal
+   */
 
   const handleClose = () => {
     reset();
     onClose();
   };
 
+  /*
+   * Submit form
+   */
+
   const submitForm = (data) => {
-    const required = data.requiredSkills
+    const requiredSkills = data.requiredSkills
       .split(",")
       .map((skill) => skill.trim())
       .filter(Boolean);
 
-    const preferred = data.preferredSkills
+    const preferredSkills = data.preferredSkills
       ? data.preferredSkills
           .split(",")
           .map((skill) => skill.trim())
@@ -152,12 +184,16 @@ function CreateJobModal({
 
     const jobData = {
       title: data.title.trim(),
+
       company: data.company.trim(),
+
       department: data.department.trim(),
+
       description: data.description.trim(),
 
-      requiredSkills: required,
-      preferredSkills: preferred,
+      requiredSkills,
+
+      preferredSkills,
 
       experience: {
         min: data.minExperience,
@@ -182,6 +218,10 @@ function CreateJobModal({
     onSubmit(jobData);
   };
 
+  if (!isOpen || !job) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
       <div className="max-h-[95vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl">
@@ -189,10 +229,10 @@ function CreateJobModal({
 
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-800 bg-slate-900 px-6 py-5">
           <div>
-            <h2 className="text-xl font-semibold text-white">Create Job</h2>
+            <h2 className="text-xl font-semibold text-white">Edit Job</h2>
 
             <p className="mt-1 text-sm text-slate-400">
-              Create a new job opening for candidate screening.
+              Update the job opening and recruitment requirements.
             </p>
           </div>
 
@@ -227,8 +267,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("title")}
-                  placeholder="MERN Stack Developer"
                   disabled={isSubmitting}
+                  placeholder="MERN Stack Developer"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -249,8 +289,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("company")}
-                  placeholder="HireSense Technologies"
                   disabled={isSubmitting}
+                  placeholder="HireSense Technologies"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -271,8 +311,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("department")}
-                  placeholder="Engineering"
                   disabled={isSubmitting}
+                  placeholder="Engineering"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -293,8 +333,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("location")}
-                  placeholder="Hyderabad"
                   disabled={isSubmitting}
+                  placeholder="Hyderabad"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -317,8 +357,8 @@ function CreateJobModal({
             <textarea
               {...register("description")}
               rows={5}
-              placeholder="Describe the responsibilities, requirements, and expectations for this position..."
               disabled={isSubmitting}
+              placeholder="Describe the responsibilities, requirements, and expectations..."
               className="w-full resize-none rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
             />
 
@@ -337,7 +377,7 @@ function CreateJobModal({
             </h3>
 
             <div className="mt-4 space-y-4">
-              {/* Required Skills */}
+              {/* Required */}
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -347,8 +387,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("requiredSkills")}
-                  placeholder="React, Node.js, MongoDB, Express.js"
                   disabled={isSubmitting}
+                  placeholder="React, Node.js, MongoDB, Express.js"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -363,7 +403,7 @@ function CreateJobModal({
                 )}
               </div>
 
-              {/* Preferred Skills */}
+              {/* Preferred */}
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -373,8 +413,8 @@ function CreateJobModal({
                 <input
                   type="text"
                   {...register("preferredSkills")}
-                  placeholder="Docker, AWS, TypeScript"
                   disabled={isSubmitting}
+                  placeholder="Docker, AWS, TypeScript"
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
                 />
 
@@ -494,9 +534,7 @@ function CreateJobModal({
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 outline-none focus:border-indigo-500 disabled:opacity-50"
                 >
                   <option value="INR">INR</option>
-
                   <option value="USD">USD</option>
-
                   <option value="EUR">EUR</option>
                 </select>
               </div>
@@ -524,15 +562,10 @@ function CreateJobModal({
                   className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 outline-none focus:border-indigo-500 disabled:opacity-50"
                 >
                   <option value="full_time">Full Time</option>
-
                   <option value="part_time">Part Time</option>
-
                   <option value="contract">Contract</option>
-
                   <option value="internship">Internship</option>
-
                   <option value="remote">Remote</option>
-
                   <option value="hybrid">Hybrid</option>
                 </select>
               </div>
@@ -565,7 +598,7 @@ function CreateJobModal({
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-300">
-              Initial Status
+              Status
             </label>
 
             <select
@@ -574,14 +607,9 @@ function CreateJobModal({
               className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 outline-none focus:border-indigo-500 disabled:opacity-50"
             >
               <option value="draft">Draft</option>
-
               <option value="open">Open</option>
+              <option value="closed">Closed</option>
             </select>
-
-            <p className="mt-1 text-xs text-slate-500">
-              New jobs are normally created as drafts until they are ready to
-              publish.
-            </p>
           </div>
 
           {/* Actions */}
@@ -601,7 +629,7 @@ function CreateJobModal({
               disabled={isSubmitting}
               className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting ? "Creating..." : "Create Job"}
+              {isSubmitting ? "Updating..." : "Update Job"}
             </button>
           </div>
         </form>
@@ -610,4 +638,4 @@ function CreateJobModal({
   );
 }
 
-export default CreateJobModal;
+export default EditJobModal;

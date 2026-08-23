@@ -8,7 +8,6 @@ import {
   updateUser,
   updateUserStatus,
   deleteUser,
-  getActiveHiringManagers,
 } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -110,12 +109,6 @@ router.get(
   getUsers,
 );
 
-router.get(
-  "/hiring-managers/active",
-  authenticate,
-  authorizeRoles("recruiter"),
-  getActiveHiringManagers,
-);
 
 router.get(
   "/hiring-managers/:id",

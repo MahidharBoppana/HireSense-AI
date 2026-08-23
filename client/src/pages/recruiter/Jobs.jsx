@@ -1,28 +1,43 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-import { getJobs, createJob } from "../../services/job.service";
+import {
+  getJobs,
+  createJob,
+  updateJob,
+  deleteJob,
+} from "../../services/job.service";
 import { getActiveHiringManagers } from "../../services/user.service";
 
 import CreateJobModal from "../../components/modals/CreateJobModal";
+import EditJobModal from "../../components/modals/EditJobModal";
+import DeleteJobModal from "../../components/modals/DeleteJobModal";
 
 function Jobs() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [employmentType, setEmploymentType] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   const queryClient = useQueryClient();
 
+  // Active Hiring Managers
   const { data: hiringManagersResponse, isLoading: isHiringManagersLoading } =
     useQuery({
-      queryKey: ["hiringManagers"],
+      queryKey: ["active-hiring-managers"],
       queryFn: getActiveHiringManagers,
     });
 
   const hiringManagers = hiringManagersResponse?.data || [];
 
+  // Create Job
   const createJobMutation = useMutation({
     mutationFn: createJob,
 
@@ -30,7 +45,7 @@ function Jobs() {
       toast.success(response?.message || "Job created successfully");
 
       queryClient.invalidateQueries({
-        queryKey: ["jobs"],
+        queryKey: ["recruiter-jobs"],
       });
 
       setIsCreateModalOpen(false);
@@ -41,6 +56,45 @@ function Jobs() {
     },
   });
 
+  const updateJobMutation = useMutation({
+    mutationFn: updateJob,
+
+    onSuccess: (response) => {
+      toast.success(response?.message || "Job updated successfully");
+
+      queryClient.invalidateQueries({
+        queryKey: ["recruiter-jobs"],
+      });
+
+      setIsEditModalOpen(false);
+      setSelectedJob(null);
+    },
+
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Failed to update job");
+    },
+  });
+
+  const deleteJobMutation = useMutation({
+    mutationFn: deleteJob,
+
+    onSuccess: (response) => {
+      toast.success(response?.message || "Job deleted successfully");
+
+      queryClient.invalidateQueries({
+        queryKey: ["recruiter-jobs"],
+      });
+
+      setIsDeleteModalOpen(false);
+      setSelectedJob(null);
+    },
+
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Failed to delete job");
+    },
+  });
+
+  // Get Recruiter's Jobs
   const {
     data: response,
     isLoading,
@@ -48,13 +102,14 @@ function Jobs() {
     error,
   } = useQuery({
     queryKey: [
-      "jobs",
+      "recruiter-jobs",
       {
         search,
         status,
         employmentType,
       },
     ],
+
     queryFn: () =>
       getJobs({
         search: search || undefined,
@@ -70,7 +125,7 @@ function Jobs() {
           <div className="text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-700 border-t-indigo-500" />
 
-            <p className="mt-4 text-sm text-slate-400">Loading jobs...</p>
+            <p className="mt-4 text-sm text-slate-400">Loading your jobs...</p>
           </div>
         </div>
       </div>
@@ -86,7 +141,7 @@ function Jobs() {
 
         <p className="mt-2 text-sm text-slate-400">
           {error?.response?.data?.message ||
-            "Something went wrong while loading jobs."}
+            "Something went wrong while loading your jobs."}
         </p>
       </div>
     );
@@ -102,25 +157,25 @@ function Jobs() {
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
+      {/* Header */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-indigo-400">Job Management</p>
 
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
-            Jobs
+            My Jobs
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            Manage job openings, requirements, hiring managers, and recruitment
-            status.
+            Create and manage your job openings and recruitment requirements.
           </p>
         </div>
 
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-500"
+          disabled={isHiringManagersLoading}
+          className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Create Job
         </button>
@@ -129,56 +184,44 @@ function Jobs() {
       {/* Statistics */}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total */}
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-400">Total Jobs</p>
 
           <p className="mt-3 text-3xl font-bold text-white">{jobs.length}</p>
         </div>
 
-        {/* Open */}
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-400">Open</p>
 
           <p className="mt-3 text-3xl font-bold text-emerald-400">{openJobs}</p>
         </div>
 
-        {/* Draft */}
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-400">Draft</p>
 
           <p className="mt-3 text-3xl font-bold text-amber-400">{draftJobs}</p>
         </div>
 
-        {/* Closed */}
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
           <p className="text-sm text-slate-400">Closed</p>
 
           <p className="mt-3 text-3xl font-bold text-red-400">{closedJobs}</p>
         </div>
       </div>
 
-      {/* Job Table */}
+      {/* Jobs */}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         {/* Filters */}
 
         <div className="flex flex-col gap-4 border-b border-slate-800 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-semibold text-white">Job Openings</h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              All active and archived job openings.
-            </p>
+            <p className="mt-1 text-sm text-slate-500">Jobs created by you.</p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            {/* Search */}
-
             <input
               type="text"
               value={search}
@@ -186,8 +229,6 @@ function Jobs() {
               placeholder="Search jobs..."
               className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 sm:w-64"
             />
-
-            {/* Status */}
 
             <select
               value={status}
@@ -199,8 +240,6 @@ function Jobs() {
               <option value="open">Open</option>
               <option value="closed">Closed</option>
             </select>
-
-            {/* Employment Type */}
 
             <select
               value={employmentType}
@@ -263,8 +302,6 @@ function Jobs() {
             <tbody className="divide-y divide-slate-800">
               {jobs.map((job) => (
                 <tr key={job._id} className="transition hover:bg-slate-800/40">
-                  {/* Job */}
-
                   <td className="px-6 py-4">
                     <div>
                       <p className="font-medium text-white">{job.title}</p>
@@ -275,19 +312,13 @@ function Jobs() {
                     </div>
                   </td>
 
-                  {/* Company */}
-
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {job.company}
                   </td>
 
-                  {/* Location */}
-
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {job.location}
                   </td>
-
-                  {/* Employment */}
 
                   <td className="px-6 py-4">
                     <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
@@ -296,8 +327,6 @@ function Jobs() {
                         .replace(/\b\w/g, (char) => char.toUpperCase())}
                     </span>
                   </td>
-
-                  {/* Hiring Manager */}
 
                   <td className="px-6 py-4 text-sm text-slate-400">
                     {job.hiringManager ? (
@@ -308,8 +337,6 @@ function Jobs() {
                       <span className="text-slate-600">Not assigned</span>
                     )}
                   </td>
-
-                  {/* Status */}
 
                   <td className="px-6 py-4">
                     <span
@@ -336,16 +363,32 @@ function Jobs() {
                     </span>
                   </td>
 
-                  {/* Actions */}
-
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-400">
+                      <button
+                        onClick={() => navigate(`/recruiter/jobs/${job._id}`)}
+                        className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-400"
+                      >
                         View
                       </button>
-
-                      <button className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-400">
+                      <button
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-400"
+                      >
                         Edit
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-red-500 hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -355,7 +398,7 @@ function Jobs() {
           </table>
         </div>
 
-        {/* Empty State */}
+        {/* Empty */}
 
         {jobs.length === 0 && (
           <div className="px-6 py-16 text-center">
@@ -371,12 +414,47 @@ function Jobs() {
           </div>
         )}
       </div>
+
+      {/* Create Job Modal */}
+
       <CreateJobModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={(data) => createJobMutation.mutate(data)}
         hiringManagers={hiringManagers}
         isSubmitting={createJobMutation.isPending}
+      />
+
+      {selectedJob && (
+        <EditJobModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedJob(null);
+          }}
+          job={selectedJob}
+          hiringManagers={hiringManagers}
+          onSubmit={(data) =>
+            updateJobMutation.mutate({
+              jobId: selectedJob._id,
+              data,
+            })
+          }
+          isSubmitting={updateJobMutation.isPending}
+        />
+      )}
+
+      <DeleteJobModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        onConfirm={() => {
+          deleteJobMutation.mutate(selectedJob._id);
+        }}
+        isDeleting={deleteJobMutation.isPending}
       />
     </div>
   );

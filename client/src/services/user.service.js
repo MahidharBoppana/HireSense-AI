@@ -112,3 +112,9 @@ export const deleteHiringManager = async (hiringManagerId) => {
 
   return response.data;
 };
+
+export const getActiveHiringManagers = async () => {
+  const response = await api.get("/recruiter/hiring-managers/active");
+
+  return response.data;
+};

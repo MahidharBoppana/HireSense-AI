@@ -65,8 +65,8 @@ const getActiveHiringManagers = asyncHandler(async (req, res) => {
     role: "hiring_manager",
     isActive: true,
   })
-    .select("_id firstName lastName email")
-    .sort({ firstName: 1, lastName: 1 });
+    .select("firstName lastName email")
+    .sort({ firstName: 1 });
 
   return res
     .status(200)
