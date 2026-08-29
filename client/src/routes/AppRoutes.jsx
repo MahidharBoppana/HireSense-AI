@@ -24,6 +24,8 @@ import HiringManagers from "../pages/admin/HiringManagers";
 // Recruiter
 import RecruiterJobs from "../pages/recruiter/Jobs";
 import RecruiterJobDetails from "../pages/recruiter/JobDetails";
+import RecruiterCandidates from "../pages/recruiter/Candidates.jsx";
+import CandidateDetails from "../pages/recruiter/CandidateDetails";
 
 function AppRoutes() {
   return (
@@ -73,7 +75,6 @@ function AppRoutes() {
         ===================================================== */}
 
         {/* Recruiter */}
-
         <Route element={<ProtectedRoute allowedRoles={["recruiter"]} />}>
           <Route element={<DashboardLayout />}>
             <Route
@@ -86,6 +87,16 @@ function AppRoutes() {
             <Route
               path="/recruiter/jobs/:id"
               element={<RecruiterJobDetails />}
+            />
+
+            <Route
+              path="/recruiter/candidates"
+              element={<RecruiterCandidates />}
+            />
+
+            <Route
+              path="/recruiter/candidates/:id"
+              element={<CandidateDetails />}
             />
           </Route>
         </Route>

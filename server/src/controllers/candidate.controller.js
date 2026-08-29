@@ -1,11 +1,74 @@
 import Candidate from "../models/Candidate.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import ApiError from "../utils/ApiError.js";
 import APIFeatures from "../utils/APIFeatures.js";
+
+const createCandidate = asyncHandler(async (req, res) => {
+  const {
+    fullName,
+    email,
+    phone,
+    resumeUrl,
+    resumePublicId,
+    skills,
+    education,
+    experience,
+    projects,
+    certifications,
+    languages,
+    github,
+    linkedin,
+    portfolio,
+    summary,
+    totalExperience,
+  } = req.body;
+
+  if (!fullName || !email || !resumeUrl || !resumePublicId) {
+    throw new ApiError(
+      400,
+      "Full name, email, resume URL and resume public ID are required",
+    );
+  }
+
+  const existingCandidate = await Candidate.findOne({
+    email: email.toLowerCase().trim(),
+    isDeleted: false,
+  });
+
+  if (existingCandidate) {
+    throw new ApiError(409, "A candidate with this email already exists");
+  }
+
+  const candidate = await Candidate.create({
+    fullName: fullName.trim(),
+    email: email.toLowerCase().trim(),
+    phone: phone?.trim(),
+    resumeUrl,
+    resumePublicId,
+    skills: skills || [],
+    education: education || [],
+    experience: experience || [],
+    projects: projects || [],
+    certifications: certifications || [],
+    languages: languages || [],
+    github,
+    linkedin,
+    portfolio,
+    summary: summary || "",
+    totalExperience: totalExperience || 0,
+    createdBy: req.user._id,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, candidate, "Candidate created successfully"));
+});
 
 const getCandidates = asyncHandler(async (req, res) => {
   const features = new APIFeatures(
     Candidate.find({
+      createdBy: req.user._id,
       isDeleted: false,
     }),
     req.query,
@@ -27,6 +90,7 @@ const getCandidateById = asyncHandler(async (req, res) => {
 
   const candidate = await Candidate.findOne({
     _id: id,
+    createdBy: req.user._id,
     isDeleted: false,
   });
 
@@ -44,6 +108,7 @@ const updateCandidate = asyncHandler(async (req, res) => {
 
   const candidate = await Candidate.findOne({
     _id: id,
+    createdBy: req.user._id,
     isDeleted: false,
   });
 
@@ -100,6 +165,7 @@ const deleteCandidate = asyncHandler(async (req, res) => {
 
   const candidate = await Candidate.findOne({
     _id: id,
+    createdBy: req.user._id,
     isDeleted: false,
   });
 
@@ -117,4 +183,10 @@ const deleteCandidate = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Candidate deleted successfully"));
 });
 
-export { getCandidates, getCandidateById, updateCandidate, deleteCandidate };
+export {
+  createCandidate,
+  getCandidates,
+  getCandidateById,
+  updateCandidate,
+  deleteCandidate,
+};

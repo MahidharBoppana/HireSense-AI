@@ -59,6 +59,13 @@ const candidateSchema = new Schema(
       },
     ],
 
+    achievements: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     projects: [
       {
         title: String,
