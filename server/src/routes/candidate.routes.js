@@ -1,7 +1,10 @@
 import { Router } from "express";
+
 import authenticate from "../middleware/auth.middleware.js";
 import authorizeRoles from "../middleware/authorize.middleware.js";
+
 import {
+  createCandidate,
   getCandidates,
   getCandidateById,
   updateCandidate,
@@ -10,31 +13,28 @@ import {
 
 const router = Router();
 
-router.get(
-  "/",
-  authenticate,
-  authorizeRoles("super_admin", "admin", "recruiter", "hiring_manager"),
-  getCandidates,
-);
+// Create Candidate
+router.post("/", authenticate, authorizeRoles("recruiter"), createCandidate);
 
-router.get(
-  "/:id",
-  authenticate,
-  authorizeRoles("super_admin", "admin", "recruiter", "hiring_manager"),
-  getCandidateById,
-);
+// Get All Candidates
+router.get("/", authenticate, authorizeRoles("recruiter"), getCandidates);
 
+// Get Candidate By ID
+router.get("/:id", authenticate, authorizeRoles("recruiter"), getCandidateById);
+
+// Update Candidate
 router.patch(
   "/:id",
   authenticate,
-  authorizeRoles("super_admin", "admin", "recruiter"),
+  authorizeRoles("recruiter"),
   updateCandidate,
 );
 
+// Delete Candidate
 router.delete(
   "/:id",
   authenticate,
-  authorizeRoles("super_admin", "admin", "recruiter"),
+  authorizeRoles("recruiter"),
   deleteCandidate,
 );
 

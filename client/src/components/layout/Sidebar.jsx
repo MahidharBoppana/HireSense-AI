@@ -47,8 +47,12 @@ function Sidebar() {
         name: "Jobs",
         path: "/recruiter/jobs",
       },
+      {
+        name: "Candidates",
+        path: "/recruiter/candidates",
+      },
     ],
-    
+
     hiring_manager: [
       {
         name: "Dashboard",
