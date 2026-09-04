@@ -93,6 +93,11 @@ const applicationSchema = new Schema(
       type: Date,
       default: null,
     },
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

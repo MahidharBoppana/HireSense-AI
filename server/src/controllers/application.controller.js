@@ -3,14 +3,117 @@ import User from "../models/User.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import APIFeatures from "../utils/APIFeatures.js";
+import Candidate from "../models/Candidate.model.js";
+import Job from "../models/Job.model.js";
+
+const createApplication = asyncHandler(async (req, res) => {
+  const { candidate, job } = req.body;
+
+  if (!candidate || !job) {
+    throw new ApiError(400, "Candidate and job are required");
+  }
+
+  const candidateExists = await Candidate.findOne({
+    _id: candidate,
+    isDeleted: false,
+  });
+
+  if (!candidateExists) {
+    throw new ApiError(404, "Candidate not found");
+  }
+
+  const jobExists = await Job.findOne({
+    _id: job,
+    isDeleted: false,
+  });
+
+  if (!jobExists) {
+    throw new ApiError(404, "Job not found");
+  }
+
+  const existingApplication = await Application.findOne({
+    candidate,
+    job,
+  });
+
+  if (existingApplication) {
+    throw new ApiError(
+      409,
+      "This candidate has already been added to this job",
+    );
+  }
+
+  const application = await Application.create({
+    candidate,
+    job,
+    recruiter: req.user._id,
+    hiringManager: jobExists.hiringManager || null,
+    status: "screening",
+  });
+
+  const populatedApplication = await Application.findById(application._id)
+    .populate("candidate")
+    .populate("job")
+    .populate("recruiter", "-password -refreshToken")
+    .populate("hiringManager", "-password -refreshToken");
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        populatedApplication,
+        "Application created successfully",
+      ),
+    );
+});
 
 const getApplicationsByJob = asyncHandler(async (req, res) => {
   const { jobId } = req.params;
 
+  const job = await Job.findOne({
+    _id: jobId,
+    isDeleted: false,
+  });
+
+  if (!job) {
+    throw new ApiError(404, "Job not found");
+  }
+
+  const filter = {
+    job: jobId,
+  };
+
+  // TEMPORARILY REMOVE recruiter/hiring-manager filtering
+  // We first need to confirm the application is being fetched.
+
+  if (req.query.search) {
+    const candidates = await Candidate.find({
+      isDeleted: false,
+      $or: [
+        {
+          fullName: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+      ],
+    }).select("_id");
+
+    filter.candidate = {
+      $in: candidates.map((candidate) => candidate._id),
+    };
+  }
+
   const features = new APIFeatures(
-    Application.find({
-      job: jobId,
-    })
+    Application.find(filter)
       .populate("candidate")
       .populate("job")
       .populate("recruiter", "-password -refreshToken")
@@ -23,6 +126,9 @@ const getApplicationsByJob = asyncHandler(async (req, res) => {
 
   const applications = await features.query;
 
+  console.log("APPLICATION FILTER:", filter);
+  console.log("APPLICATIONS FOUND:", applications);
+
   return res
     .status(200)
     .json(
@@ -33,7 +139,19 @@ const getApplicationsByJob = asyncHandler(async (req, res) => {
 const getApplicationById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const application = await Application.findById(id)
+  const filter = {
+    _id: id,
+  };
+
+  if (req.user.role === "recruiter") {
+    filter.recruiter = req.user._id;
+  }
+
+  if (req.user.role === "hiring_manager") {
+    filter.hiringManager = req.user._id;
+  }
+
+  const application = await Application.findOne(filter)
     .populate("candidate")
     .populate("job")
     .populate("recruiter", "-password -refreshToken")
@@ -54,7 +172,10 @@ const assignHiringManager = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { hiringManagerId } = req.body;
 
-  const application = await Application.findById(id);
+  const application = await Application.findOne({
+    _id: id,
+    recruiter: req.user._id,
+  });
 
   if (!application) {
     throw new ApiError(404, "Application not found");
@@ -131,7 +252,20 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid application status");
   }
 
-  const application = await Application.findById(id);
+  let filter = {
+    _id: id,
+    isDeleted: false,
+  };
+
+  if (req.user.role === "recruiter") {
+    filter.recruiter = req.user._id;
+  }
+
+  if (req.user.role === "hiring_manager") {
+    filter.hiringManager = req.user._id;
+  }
+
+  const application = await Application.findOne(filter);
 
   if (!application) {
     throw new ApiError(404, "Application not found");
@@ -259,6 +393,7 @@ const finalizeApplication = asyncHandler(async (req, res) => {
 });
 
 export {
+  createApplication,
   updateApplicationStatus,
   getApplicationsByJob,
   getApplicationById,
