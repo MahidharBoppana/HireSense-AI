@@ -3,7 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import fs from "fs/promises";
-import path from "path";
+
 
 import extractTextFromPdf from "../services/pdfParser.service.js";
 import extractTextFromDocx from "../services/docxParser.service.js";
@@ -20,9 +20,17 @@ const parseResumeFile = asyncHandler(async (req, res) => {
     const buffer = await fs.readFile(filePath);
 
     let text = "";
+    let links = {
+      github: "",
+      linkedin: "",
+      portfolio: "",
+    };
 
     if (req.file.mimetype === "application/pdf") {
-      text = await extractTextFromPdf(buffer);
+      const result = await extractTextFromPdf(buffer);
+
+      text = result.text;
+      links = result.links;
     } else if (
       req.file.mimetype ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -36,7 +44,7 @@ const parseResumeFile = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Could not extract text from the resume");
     }
 
-    const parsedResume = parseResume(text);
+    const parsedResume = parseResume(text, links);
 
     return res.status(200).json(
       new ApiResponse(

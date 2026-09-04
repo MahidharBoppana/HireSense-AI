@@ -26,6 +26,7 @@ import RecruiterJobs from "../pages/recruiter/Jobs";
 import RecruiterJobDetails from "../pages/recruiter/JobDetails";
 import RecruiterCandidates from "../pages/recruiter/Candidates.jsx";
 import CandidateDetails from "../pages/recruiter/CandidateDetails";
+import CandidateEdit from "../pages/recruiter/CandidateEdit";
 
 function AppRoutes() {
   return (
@@ -97,6 +98,11 @@ function AppRoutes() {
             <Route
               path="/recruiter/candidates/:id"
               element={<CandidateDetails />}
+            />
+
+            <Route
+              path="/recruiter/candidates/:id/edit"
+              element={<CandidateEdit />}
             />
           </Route>
         </Route>

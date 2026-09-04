@@ -125,6 +125,7 @@ const updateCandidate = asyncHandler(async (req, res) => {
     experience,
     projects,
     certifications,
+    achievements,
     languages,
     github,
     linkedin,
@@ -133,23 +134,80 @@ const updateCandidate = asyncHandler(async (req, res) => {
     totalExperience,
   } = req.body;
 
-  if (fullName !== undefined) candidate.fullName = fullName.trim();
-  if (email !== undefined) candidate.email = email.toLowerCase().trim();
-  if (phone !== undefined) candidate.phone = phone.trim();
+  // Check duplicate email only when email is changed
+  if (email !== undefined) {
+    const normalizedEmail = email.toLowerCase().trim();
 
-  if (skills !== undefined) candidate.skills = skills;
-  if (education !== undefined) candidate.education = education;
-  if (experience !== undefined) candidate.experience = experience;
-  if (projects !== undefined) candidate.projects = projects;
-  if (certifications !== undefined) candidate.certifications = certifications;
-  if (languages !== undefined) candidate.languages = languages;
+    if (normalizedEmail !== candidate.email) {
+      const existingCandidate = await Candidate.findOne({
+        email: normalizedEmail,
+        _id: { $ne: id },
+        isDeleted: false,
+      });
 
-  if (github !== undefined) candidate.github = github;
-  if (linkedin !== undefined) candidate.linkedin = linkedin;
-  if (portfolio !== undefined) candidate.portfolio = portfolio;
-  if (summary !== undefined) candidate.summary = summary;
-  if (totalExperience !== undefined)
+      if (existingCandidate) {
+        throw new ApiError(409, "A candidate with this email already exists");
+      }
+
+      candidate.email = normalizedEmail;
+    }
+  }
+
+  if (fullName !== undefined) {
+    candidate.fullName = fullName.trim();
+  }
+
+  if (phone !== undefined) {
+    candidate.phone = phone.trim();
+  }
+
+  if (skills !== undefined) {
+    candidate.skills = skills;
+  }
+
+  if (education !== undefined) {
+    candidate.education = education;
+  }
+
+  if (experience !== undefined) {
+    candidate.experience = experience;
+  }
+
+  if (projects !== undefined) {
+    candidate.projects = projects;
+  }
+
+  if (certifications !== undefined) {
+    candidate.certifications = certifications;
+  }
+
+  if (achievements !== undefined) {
+    candidate.achievements = achievements;
+  }
+
+  if (languages !== undefined) {
+    candidate.languages = languages;
+  }
+
+  if (github !== undefined) {
+    candidate.github = github;
+  }
+
+  if (linkedin !== undefined) {
+    candidate.linkedin = linkedin;
+  }
+
+  if (portfolio !== undefined) {
+    candidate.portfolio = portfolio;
+  }
+
+  if (summary !== undefined) {
+    candidate.summary = summary;
+  }
+
+  if (totalExperience !== undefined) {
     candidate.totalExperience = totalExperience;
+  }
 
   candidate.updatedBy = req.user._id;
 
