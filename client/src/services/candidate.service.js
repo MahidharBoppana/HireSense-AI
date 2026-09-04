@@ -25,7 +25,10 @@ export const createCandidate = async (data) => {
 
 // Update candidate
 export const updateCandidate = async ({ candidateId, data }) => {
-  const response = await api.patch(`/candidates/${candidateId}`, data);
+  const response = await api.patch(
+    `/candidates/${candidateId}`,
+    data,
+  );
 
   return response.data;
 };

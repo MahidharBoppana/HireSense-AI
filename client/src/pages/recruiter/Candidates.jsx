@@ -14,6 +14,11 @@ import CreateCandidateModal from "../../components/modals/CreateCandidateModal";
 function Candidates() {
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    candidateId: null,
+    candidateName: "",
+  });
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -73,15 +78,35 @@ function Candidates() {
   });
 
   const handleDelete = (candidateId, candidateName) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${candidateName}?`,
-    );
+    setDeleteModal({
+      isOpen: true,
+      candidateId,
+      candidateName,
+    });
+  };
 
-    if (!confirmed) {
-      return;
-    }
+  const confirmDelete = () => {
+    if (!deleteModal.candidateId) return;
 
-    deleteCandidateMutation.mutate(candidateId);
+    deleteCandidateMutation.mutate(deleteModal.candidateId, {
+      onSuccess: () => {
+        setDeleteModal({
+          isOpen: false,
+          candidateId: null,
+          candidateName: "",
+        });
+      },
+    });
+  };
+
+  const closeDeleteModal = () => {
+    if (deleteCandidateMutation.isPending) return;
+
+    setDeleteModal({
+      isOpen: false,
+      candidateId: null,
+      candidateName: "",
+    });
   };
 
   if (isLoading) {
@@ -401,6 +426,73 @@ function Candidates() {
         onSubmit={(data) => createCandidateMutation.mutate(data)}
         isSubmitting={createCandidateMutation.isPending}
       />
+      {/* Delete Confirmation Modal */}
+
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            {/* Icon */}
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
+              <svg
+                className="h-6 w-6 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+                />
+              </svg>
+            </div>
+
+            {/* Content */}
+
+            <h2 className="mt-5 text-xl font-semibold text-white">
+              Delete Candidate
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-white">
+                {deleteModal.candidateName}
+              </span>
+              ?
+            </p>
+
+            <p className="mt-2 text-xs text-slate-500">
+              This candidate will be removed from your candidate list.
+            </p>
+
+            {/* Actions */}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={deleteCandidateMutation.isPending}
+                className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleteCandidateMutation.isPending}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleteCandidateMutation.isPending
+                  ? "Deleting..."
+                  : "Delete Candidate"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

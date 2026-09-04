@@ -181,7 +181,16 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
 
         totalExperience: parsedData.totalExperience || 0,
 
-        education: parsedData.education || [],
+        education:
+          parsedData.education?.map((item) => ({
+            ...item,
+            startDate: item.startDate
+              ? new Date(item.startDate).toISOString().split("T")[0]
+              : "",
+            endDate: item.endDate
+              ? new Date(item.endDate).toISOString().split("T")[0]
+              : "",
+          })) || [],
 
         experience: parsedData.experience || [],
 
@@ -628,12 +637,12 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                     degree: "",
                     institution: "",
                     fieldOfStudy: "",
-                    startDate: null,
-                    endDate: null,
+                    startDate: "",
+                    endDate: "",
                   })
                 }
                 disabled={isLoading}
-                className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
               >
                 + Add Education
               </button>
@@ -646,6 +655,7 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                   className="rounded-xl border border-slate-800 bg-slate-950/50 p-4"
                 >
                   <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Degree */}
                     <input
                       {...register(`education.${index}.degree`)}
                       placeholder="Degree"
@@ -653,6 +663,7 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                       className="input-field"
                     />
 
+                    {/* Institution */}
                     <input
                       {...register(`education.${index}.institution`)}
                       placeholder="Institution"
@@ -660,13 +671,54 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                       className="input-field"
                     />
 
-                    <input
+                    {/* Field of Study */}
+                    <select
                       {...register(`education.${index}.fieldOfStudy`)}
-                      placeholder="Field of Study"
                       disabled={isLoading}
                       className="input-field"
-                    />
+                    >
+                      <option value="">Select Field of Study</option>
 
+                      <option value="Computer Science">Computer Science</option>
+
+                      <option value="Computer Application">
+                        Computer Application
+                      </option>
+
+                      <option value="Information Technology">
+                        Information Technology
+                      </option>
+
+                      <option value="Electronics">Electronics</option>
+
+                      <option value="Electrical Engineering">
+                        Electrical Engineering
+                      </option>
+
+                      <option value="Mechanical Engineering">
+                        Mechanical Engineering
+                      </option>
+
+                      <option value="Civil Engineering">
+                        Civil Engineering
+                      </option>
+
+                      <option value="Data Science">Data Science</option>
+
+                      <option value="Artificial Intelligence">
+                        Artificial Intelligence
+                      </option>
+
+                      <option value="Commerce">Commerce</option>
+
+                      <option value="Business Administration">
+                        Business Administration
+                      </option>
+
+                      <option value="Other">Other</option>
+                    </select>
+
+                    {/* Start Date */}
                     <input
                       type="date"
                       {...register(`education.${index}.startDate`)}
@@ -674,6 +726,7 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                       className="input-field"
                     />
 
+                    {/* End Date */}
                     <input
                       type="date"
                       {...register(`education.${index}.endDate`)}
@@ -845,7 +898,7 @@ function CreateCandidateModal({ isOpen, onClose, onSubmit, isSubmitting }) {
                     disabled={isLoading}
                     className="input-field mt-4"
                   />
-                  
+
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <input
                       type="url"

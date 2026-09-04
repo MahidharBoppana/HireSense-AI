@@ -177,19 +177,21 @@ const extractSummary = (text) => {
 ========================================================= */
 
 const createDate = (year) => {
-  if (!year) {
-    return null;
-  }
+  if (!year) return null;
 
-  return new Date(`${year}-01-01`);
+  return `${year}-01-01`;
 };
 
 const extractYearRange = (text) => {
-  const match = text.match(/(\d{4})\s*[–-]\s*(\d{4})/);
+  const match = text.match(
+    /\b(19\d{2}|20\d{2})\s*(?:[-–—]|to)\s*(19\d{2}|20\d{2})\b/i,
+  );
 
   if (!match) {
+    const singleYear = text.match(/\b(19\d{2}|20\d{2})\b/);
+
     return {
-      startDate: null,
+      startDate: singleYear ? createDate(singleYear[1]) : null,
       endDate: null,
     };
   }
@@ -198,6 +200,26 @@ const extractYearRange = (text) => {
     startDate: createDate(match[1]),
     endDate: createDate(match[2]),
   };
+};
+
+const extractFieldOfStudy = (degree) => {
+  const normalized = degree.toLowerCase();
+
+  if (normalized.includes("computer application")) {
+    return "Computer Application";
+  }
+
+  if (normalized.includes("computer science")) {
+    return "Computer Science";
+  }
+
+  if (normalized.includes("information technology")) {
+    return "Information Technology";
+  }
+
+  const fieldMatch = degree.match(/(?:in|major in|specialization in)\s+(.+)$/i);
+
+  return fieldMatch ? fieldMatch[1].trim() : "";
 };
 
 /* =========================================================
@@ -217,7 +239,7 @@ const extractEducation = (text) => {
   const education = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const currentLine = lines[i];
+    const currentLine = lines[i].trim();
 
     const isInstitution = /University|College|School/i.test(currentLine);
 
@@ -225,33 +247,51 @@ const extractEducation = (text) => {
       continue;
     }
 
-    const dateRange = extractYearRange(currentLine);
+    // Extract dates from institution line
+    const dates = extractYearRange(currentLine);
 
+    // Institution name
     const institution = currentLine
       .replace(/\s*\d{4}\s*[–-]\s*\d{4}/, "")
       .replace(/\s*\d{4}\s*$/, "")
       .trim();
 
+    // Degree is normally the next line
     const degreeLine = lines[i + 1] || "";
 
-    let degree = degreeLine;
-
-    degree = degree
+    let degree = degreeLine
       .replace(/\s*[–-]\s*CGPA:\s*[\d.]+/i, "")
       .replace(/\s*[–-]\s*[\d.]+%/i, "")
       .replace(/\s+(Vadodara|Gujarat|Nallajerla|Andhra Pradesh).*$/i, "")
       .trim();
 
-    /*
-      If the institution has no date range,
-      try to extract a year from the institution line.
-    */
+    // Extract field of study
+    let fieldOfStudy = extractFieldOfStudy(degree);
 
-    let startDate = dateRange.startDate;
-    let endDate = dateRange.endDate;
+    // If date is not on institution line,
+    // check nearby lines
+    let startDate = dates.startDate;
+    let endDate = dates.endDate;
 
     if (!startDate && !endDate) {
-      const yearMatch = currentLine.match(/\b(20\d{2})\b/);
+      for (
+        let j = Math.max(0, i - 1);
+        j <= Math.min(lines.length - 1, i + 2);
+        j++
+      ) {
+        const nearbyDates = extractYearRange(lines[j]);
+
+        if (nearbyDates.startDate || nearbyDates.endDate) {
+          startDate = nearbyDates.startDate;
+          endDate = nearbyDates.endDate;
+          break;
+        }
+      }
+    }
+
+    // If still no date, try a single year
+    if (!startDate && !endDate) {
+      const yearMatch = currentLine.match(/\b(19\d{2}|20\d{2})\b/);
 
       if (yearMatch) {
         startDate = createDate(yearMatch[1]);
@@ -261,7 +301,7 @@ const extractEducation = (text) => {
     education.push({
       degree,
       institution,
-      fieldOfStudy: "",
+      fieldOfStudy,
       startDate,
       endDate,
     });
@@ -315,7 +355,7 @@ const cleanProjectTechnologies = (technologyText) => {
    PROJECTS
 ========================================================= */
 
-const extractProjects = (text) => {
+const extractProjects = (text, allLinks = []) => {
   const lines = extractSection(text, "Projects", [
     "Technical Skills",
     "Experience",
@@ -323,6 +363,31 @@ const extractProjects = (text) => {
     "Certifications & Achievements",
     "Certifications",
   ]);
+
+  // NEW: Categorize project-specific URLs
+  const githubRepoUrls = allLinks.filter((url) => {
+    const lower = url.toLowerCase();
+    if (!lower.includes("github.com")) return false;
+    try {
+      const pathParts = new URL(
+        url.startsWith("http") ? url : `https://${url}`,
+      ).pathname
+        .split("/")
+        .filter(Boolean);
+      return pathParts.length >= 2; // Repository URL: github.com/user/repo
+    } catch {
+      return false;
+    }
+  });
+
+  const liveUrls = allLinks.filter((url) => {
+    const lower = url.toLowerCase();
+    return (
+      !lower.includes("github.com") &&
+      !lower.includes("linkedin.com") &&
+      !lower.startsWith("mailto:")
+    );
+  });
 
   const projects = [];
 
@@ -369,7 +434,26 @@ const extractProjects = (text) => {
     projects.push(currentProject);
   }
 
-  return projects;
+  // NEW: Match and attach GitHub and Live links to parsed projects
+  return projects.map((project) => {
+    const titleSlug = project.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    const matchedGithub = githubRepoUrls.find((url) => {
+      const cleanUrl = url.toLowerCase().replace(/[^a-z0-9]/g, "");
+      return cleanUrl.includes(titleSlug) || titleSlug.includes(cleanUrl);
+    });
+
+    const matchedLive = liveUrls.find((url) => {
+      const cleanUrl = url.toLowerCase().replace(/[^a-z0-9]/g, "");
+      return cleanUrl.includes(titleSlug) || titleSlug.includes(cleanUrl);
+    });
+
+    return {
+      ...project,
+      github: matchedGithub || githubRepoUrls.shift() || "",
+      live: matchedLive || liveUrls.shift() || "",
+    };
+  });
 };
 
 /* =========================================================
@@ -475,7 +559,7 @@ const calculateTotalExperience = (experience) => {
    MAIN PARSER
 ========================================================= */
 
-const parseResume = (text) => {
+const parseResume = (text, links = {}) => {
   const cleanedText = cleanText(text);
 
   const experience = extractExperience(cleanedText);
@@ -490,11 +574,11 @@ const parseResume = (text) => {
 
     phone: extractPhone(cleanedText),
 
-    github: extractGithub(cleanedText),
+    github: links.github || extractGithub(cleanedText),
 
-    linkedin: extractLinkedIn(cleanedText),
+    linkedin: links.linkedin || extractLinkedIn(cleanedText),
 
-    portfolio: extractPortfolio(cleanedText),
+    portfolio: links.portfolio || extractPortfolio(cleanedText),
 
     skills: extractSkills(cleanedText),
 
@@ -504,7 +588,8 @@ const parseResume = (text) => {
 
     experience,
 
-    projects: extractProjects(cleanedText),
+    // UPDATED: Pass links.allLinks to extractProjects
+    projects: extractProjects(cleanedText, links.allLinks || []),
 
     certifications,
 
