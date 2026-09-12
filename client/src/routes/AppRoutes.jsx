@@ -5,7 +5,7 @@ import Login from "../pages/auth/Login";
 import SuperAdminDashboard from "../pages/super-admin/Dashboard";
 import AdminDashboard from "../pages/admin/Dashboard";
 import RecruiterDashboard from "../pages/recruiter/Dashboard";
-import HiringManagerDashboard from "../pages/hiring-manager/Dashboard";
+import HiringManagerDashboard from "../pages/hiring-manager/HiringManagerDashboard.jsx";
 
 import NotFound from "../pages/shared/NotFound";
 import Unauthorized from "../pages/shared/Unauthorized";
@@ -28,6 +28,10 @@ import RecruiterCandidates from "../pages/recruiter/Candidates.jsx";
 import CandidateDetails from "../pages/recruiter/CandidateDetails";
 import CandidateEdit from "../pages/recruiter/CandidateEdit";
 import ApplicationDetails from "../pages/recruiter/ApplicationDetails";
+
+// Hiring Manager
+import HiringManagerApplications from "../pages/hiring-manager/HiringManagerApplications";
+import HiringManagerApplicationDetails from "../pages/hiring-manager/HiringManagerApplicationDetails";
 
 function AppRoutes() {
   return (
@@ -122,6 +126,16 @@ function AppRoutes() {
             <Route
               path="/hiring-manager/dashboard"
               element={<HiringManagerDashboard />}
+            />
+
+            <Route
+              path="/hiring-manager/applications"
+              element={<HiringManagerApplications />}
+            />
+
+            <Route
+              path="/hiring-manager/applications/:id"
+              element={<HiringManagerApplicationDetails />}
             />
           </Route>
         </Route>

@@ -3,6 +3,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import APIFeatures from "../utils/APIFeatures.js";
+import Application from "../models/Application.model.js";
+import { deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const createCandidate = asyncHandler(async (req, res) => {
   const {
@@ -11,6 +13,7 @@ const createCandidate = asyncHandler(async (req, res) => {
     phone,
     resumeUrl,
     resumePublicId,
+    resumeResourceType,
     skills,
     education,
     experience,
@@ -46,6 +49,7 @@ const createCandidate = asyncHandler(async (req, res) => {
     phone: phone?.trim(),
     resumeUrl,
     resumePublicId,
+    resumeResourceType: resumeResourceType || "raw",
     skills: skills || [],
     education: education || [],
     experience: experience || [],
@@ -231,14 +235,31 @@ const deleteCandidate = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Candidate not found");
   }
 
-  candidate.isDeleted = true;
-  candidate.updatedBy = req.user._id;
+  // Delete related applications
+  await Application.deleteMany({
+    candidate: candidate._id,
+  });
 
-  await candidate.save();
+  // Delete resume from Cloudinary
+  if (candidate.resumePublicId) {
+    await deleteFromCloudinary(
+      candidate.resumePublicId,
+      candidate.resumeResourceType || "raw",
+    );
+  }
+
+  // Permanently delete candidate
+  await Candidate.findByIdAndDelete(candidate._id);
 
   return res
     .status(200)
-    .json(new ApiResponse(200, null, "Candidate deleted successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        "Candidate and all related data deleted successfully",
+      ),
+    );
 });
 
 export {

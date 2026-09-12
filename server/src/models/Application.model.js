@@ -59,6 +59,22 @@ const applicationSchema = new Schema(
       default: "",
     },
 
+    screeningStatus: {
+      type: String,
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "pending",
+    },
+
+    screenedAt: {
+      type: Date,
+      default: null,
+    },
+
+    screeningError: {
+      type: String,
+      default: "",
+    },
+
     status: {
       type: String,
       enum: ["screening", "shortlisted", "interview", "rejected", "hired"],

@@ -31,6 +31,11 @@ const candidateSchema = new Schema(
       required: true,
     },
 
+    resumeResourceType: {
+      type: String,
+      default: "raw",
+    },
+
     skills: [
       {
         type: String,

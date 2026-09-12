@@ -1,26 +1,24 @@
-import { Router } from "express";
+import express from "express";
+
+import {
+  createApplication,
+  getApplicationsByJob,
+  getApplicationById,
+  updateApplicationStatus,
+  assignHiringManager,
+  getAssignedApplications,
+  getAssignedApplicationById,
+  addInterviewNotes,
+  finalizeApplication,
+} from "../controllers/application.controller.js";
 
 import authenticate from "../middleware/auth.middleware.js";
 import authorizeRoles from "../middleware/authorize.middleware.js";
 
-import {
-  createApplication,
-  updateApplicationStatus,
-  getApplicationsByJob,
-  getApplicationById,
-  assignHiringManager,
-  addInterviewNotes,
-  getAssignedApplications,
-  getAssignedApplicationById,
-  finalizeApplication,
-} from "../controllers/application.controller.js";
+const router = express.Router();
 
-const router = Router();
-
-// Create Application
 router.post("/", authenticate, authorizeRoles("recruiter"), createApplication);
 
-// Get Applications by Job
 router.get(
   "/job/:jobId",
   authenticate,
@@ -28,7 +26,6 @@ router.get(
   getApplicationsByJob,
 );
 
-// Get Assigned Applications - Hiring Manager
 router.get(
   "/assigned",
   authenticate,
@@ -36,7 +33,6 @@ router.get(
   getAssignedApplications,
 );
 
-// Get Assigned Application by ID - Hiring Manager
 router.get(
   "/assigned/:id",
   authenticate,
@@ -44,7 +40,6 @@ router.get(
   getAssignedApplicationById,
 );
 
-// Get Application by ID
 router.get(
   "/:id",
   authenticate,
@@ -52,7 +47,6 @@ router.get(
   getApplicationById,
 );
 
-// Update Application Status
 router.patch(
   "/:id/status",
   authenticate,
@@ -60,7 +54,6 @@ router.patch(
   updateApplicationStatus,
 );
 
-// Assign Hiring Manager
 router.patch(
   "/:id/assign",
   authenticate,
@@ -68,7 +61,6 @@ router.patch(
   assignHiringManager,
 );
 
-// Add Interview Notes
 router.patch(
   "/:id/interview-notes",
   authenticate,
@@ -76,7 +68,6 @@ router.patch(
   addInterviewNotes,
 );
 
-// Final Hiring Decision
 router.patch(
   "/:id/final-decision",
   authenticate,

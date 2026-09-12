@@ -58,6 +58,10 @@ function Sidebar() {
         name: "Dashboard",
         path: "/hiring-manager/dashboard",
       },
+      {
+        name: "Applications",
+        path: "/hiring-manager/applications",
+      },
     ],
   };
 

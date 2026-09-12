@@ -6,6 +6,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 import APIFeatures from "../utils/APIFeatures.js";
 import Candidate from "../models/Candidate.model.js";
 import Job from "../models/Job.model.js";
+import screenCandidate from "../services/aiScreening.service.js";
+import rankApplications from "../services/aiRanking.service.js";
 
 const createApplication = asyncHandler(async (req, res) => {
   const { candidate, job } = req.body;
@@ -38,19 +40,38 @@ const createApplication = asyncHandler(async (req, res) => {
   });
 
   if (existingApplication) {
-    throw new ApiError(
-      409,
-      "This candidate has already been added to this job",
-    );
+    throw new ApiError(409, "Candidate has already applied to this job");
   }
 
+  const screeningResult = await screenCandidate(jobExists, candidateExists);
+
   const application = await Application.create({
-    candidate,
-    job,
+    candidate: candidateExists._id,
+    job: jobExists._id,
     recruiter: req.user._id,
+
     hiringManager: jobExists.hiringManager || null,
+
+    aiScore: screeningResult.aiScore,
+
+    recommendation: screeningResult.recommendation,
+
+    matchedSkills: screeningResult.matchedSkills,
+
+    missingSkills: screeningResult.missingSkills,
+
+    aiSummary: screeningResult.aiSummary,
+
+    screeningStatus: "completed",
+
+    screenedAt: new Date(),
+
     status: "screening",
+
+    updatedBy: req.user._id,
   });
+
+  await rankApplications(jobExists._id);
 
   const populatedApplication = await Application.findById(application._id)
     .populate("candidate")
@@ -64,7 +85,7 @@ const createApplication = asyncHandler(async (req, res) => {
       new ApiResponse(
         201,
         populatedApplication,
-        "Application created successfully",
+        "Application created and screened successfully",
       ),
     );
 });
@@ -192,8 +213,18 @@ const assignHiringManager = asyncHandler(async (req, res) => {
   }
 
   application.hiringManager = hiringManager._id;
+  application.updatedBy = req.user._id;
 
   await application.save();
+
+  const job = await Job.findById(application.job);
+
+  if (job) {
+    job.hiringManager = hiringManager._id;
+    job.updatedBy = req.user._id;
+
+    await job.save();
+  }
 
   return res
     .status(200)
@@ -248,73 +279,131 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     "hired",
   ];
 
-  if (!allowedStatuses.includes(status)) {
+  if (!status || !allowedStatuses.includes(status)) {
     throw new ApiError(400, "Invalid application status");
   }
 
-  let filter = {
+  const application = await Application.findOne({
     _id: id,
-    isDeleted: false,
-  };
-
-  if (req.user.role === "recruiter") {
-    filter.recruiter = req.user._id;
-  }
-
-  if (req.user.role === "hiring_manager") {
-    filter.hiringManager = req.user._id;
-  }
-
-  const application = await Application.findOne(filter);
+  });
 
   if (!application) {
     throw new ApiError(404, "Application not found");
   }
 
-  const validTransitions = {
-    screening: ["shortlisted", "rejected"],
+  // Recruiter workflow
+  if (req.user.role === "recruiter") {
+    if (application.recruiter.toString() !== req.user._id.toString()) {
+      throw new ApiError(
+        403,
+        "You are not authorized to update this application",
+      );
+    }
 
-    shortlisted: ["interview"],
+    const allowedRecruiterTransitions = {
+      screening: ["shortlisted", "rejected"],
+      shortlisted: ["interview", "rejected"],
+    };
 
-    interview: ["hired", "rejected"],
+    const allowedNextStatuses =
+      allowedRecruiterTransitions[application.status] || [];
 
-    hired: [],
+    if (!allowedNextStatuses.includes(status)) {
+      throw new ApiError(
+        400,
+        `Cannot move application from ${application.status} to ${status}`,
+      );
+    }
+  }
 
-    rejected: [],
-  };
+  // Hiring Manager workflow
+  if (req.user.role === "hiring_manager") {
+    if (
+      !application.hiringManager ||
+      application.hiringManager.toString() !== req.user._id.toString()
+    ) {
+      throw new ApiError(
+        403,
+        "You are not authorized to update this application",
+      );
+    }
 
-  const currentStatus = application.status;
-
-  if (!validTransitions[currentStatus].includes(status)) {
-    throw new ApiError(
-      400,
-      `Cannot change status from ${currentStatus} to ${status}`,
-    );
+    if (application.status !== "shortlisted" || status !== "interview") {
+      throw new ApiError(
+        400,
+        "Hiring manager can only move a shortlisted application to interview",
+      );
+    }
   }
 
   application.status = status;
+  application.updatedBy = req.user._id;
 
   await application.save();
+
+  const populatedApplication = await Application.findById(application._id)
+    .populate("candidate")
+    .populate("job")
+    .populate("recruiter", "-password -refreshToken")
+    .populate("hiringManager", "-password -refreshToken");
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        application,
+        populatedApplication,
         "Application status updated successfully",
       ),
     );
 });
 
 const getAssignedApplications = asyncHandler(async (req, res) => {
-  const applications = await Application.find({
+  const filter = {
     hiringManager: req.user._id,
-  })
-    .populate("candidate")
-    .populate("job")
-    .populate("recruiter", "-password -refreshToken")
-    .sort({ updatedAt: -1 });
+  };
+
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  if (req.query.search) {
+    const candidates = await Candidate.find({
+      isDeleted: false,
+      $or: [
+        {
+          fullName: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: req.query.search,
+            $options: "i",
+          },
+        },
+      ],
+    }).select("_id");
+
+    filter.candidate = {
+      $in: candidates.map((candidate) => candidate._id),
+    };
+  }
+
+  const features = new APIFeatures(
+    Application.find(filter)
+      .populate("candidate")
+      .populate("job")
+      .populate("recruiter", "-password -refreshToken")
+      .populate("hiringManager", "-password -refreshToken"),
+    req.query,
+  )
+    .filter()
+    .sort()
+    .paginate();
+
+  const applications = await features.query;
 
   return res
     .status(200)
@@ -375,7 +464,18 @@ const finalizeApplication = asyncHandler(async (req, res) => {
   if (application.status !== "interview") {
     throw new ApiError(
       400,
-      "Only applications in interview stage can be finalized",
+      "Application must be in interview stage before final decision",
+    );
+  }
+
+  if (
+    !application.interviewNotes?.trim() ||
+    !application.interviewRating ||
+    !application.interviewRecommendation
+  ) {
+    throw new ApiError(
+      400,
+      "Interview feedback must be completed before final decision",
     );
   }
 
@@ -392,6 +492,27 @@ const finalizeApplication = asyncHandler(async (req, res) => {
     );
 });
 
+const rankJobApplications = asyncHandler(async (req, res) => {
+  const { jobId } = req.params;
+
+  const job = await Job.findOne({
+    _id: jobId,
+    isDeleted: false,
+  });
+
+  if (!job) {
+    throw new ApiError(404, "Job not found");
+  }
+
+  const applications = await rankApplications(jobId);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, applications, "Applications ranked successfully"),
+    );
+});
+
 export {
   createApplication,
   updateApplicationStatus,
@@ -402,4 +523,5 @@ export {
   getAssignedApplications,
   getAssignedApplicationById,
   finalizeApplication,
+  rankJobApplications,
 };

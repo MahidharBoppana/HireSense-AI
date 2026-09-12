@@ -5,7 +5,11 @@ import toast from "react-hot-toast";
 import {
   getApplicationById,
   updateApplicationStatus,
+  assignHiringManager,
 } from "../../services/application.service";
+
+import { getActiveHiringManagers } from "../../services/user.service.js";
+import { useState } from "react";
 
 function InfoItem({ label, value }) {
   return (
@@ -48,6 +52,8 @@ function ApplicationDetails() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [selectedHiringManager, setSelectedHiringManager] = useState("");
+
   const {
     data: response,
     isLoading,
@@ -57,6 +63,52 @@ function ApplicationDetails() {
     queryKey: ["application", id],
     queryFn: () => getApplicationById(id),
     enabled: !!id,
+  });
+
+  const { data: hiringManagersResponse, isLoading: isHiringManagersLoading } =
+    useQuery({
+      queryKey: ["activeHiringManagers"],
+      queryFn: getActiveHiringManagers,
+    });
+
+  const hiringManagers = hiringManagersResponse?.data || [];
+
+  const assignHiringManagerMutation = useMutation({
+    mutationFn: assignHiringManager,
+
+    onSuccess: (response) => {
+      toast.success(
+        response?.message || "Hiring manager assigned successfully",
+      );
+
+      // Application details
+      queryClient.invalidateQueries({
+        queryKey: ["application", id],
+      });
+
+      // Job details applications
+      queryClient.invalidateQueries({
+        queryKey: ["job-applications"],
+      });
+
+      // Job details
+      queryClient.invalidateQueries({
+        queryKey: ["job", application?.job?._id],
+      });
+
+      // Jobs list
+      queryClient.invalidateQueries({
+        queryKey: ["jobs"],
+      });
+
+      setSelectedHiringManager("");
+    },
+
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message || "Failed to assign hiring manager",
+      );
+    },
   });
 
   const statusMutation = useMutation({
@@ -144,10 +196,9 @@ function ApplicationDetails() {
   const job = application.job;
 
   const canShortlist = application.status === "screening";
+
   const canReject =
-    application.status === "screening" ||
-    application.status === "shortlisted" ||
-    application.status === "interview";
+    application.status === "screening" || application.status === "shortlisted";
 
   const canMoveToInterview = application.status === "shortlisted";
 
@@ -487,30 +538,122 @@ function ApplicationDetails() {
 
       {/* Hiring Manager */}
 
+      {/* Hiring Manager */}
+
       <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 className="text-lg font-semibold text-white">Hiring Manager</h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Hiring Manager</h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Assign a hiring manager to this application.
+            </p>
+          </div>
+
+          {application.hiringManager && (
+            <span className="rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400">
+              Assigned
+            </span>
+          )}
+        </div>
 
         {application.hiringManager ? (
-          <div className="mt-5 flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/10 text-lg font-semibold text-indigo-400">
-              {application.hiringManager.firstName?.charAt(0)?.toUpperCase()}
+          <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/10 text-lg font-semibold text-indigo-400">
+                {application.hiringManager.firstName?.charAt(0)?.toUpperCase()}
+              </div>
+
+              <div>
+                <p className="font-medium text-white">
+                  {application.hiringManager.firstName}{" "}
+                  {application.hiringManager.lastName}
+                </p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  {application.hiringManager.email}
+                </p>
+              </div>
             </div>
 
-            <div>
-              <p className="font-medium text-white">
-                {application.hiringManager.firstName}{" "}
-                {application.hiringManager.lastName}
-              </p>
+            <select
+              value={selectedHiringManager}
+              onChange={(e) => setSelectedHiringManager(e.target.value)}
+              disabled={
+                isHiringManagersLoading || assignHiringManagerMutation.isPending
+              }
+              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500"
+            >
+              <option value="">Change Hiring Manager</option>
 
-              <p className="mt-1 text-sm text-slate-500">
-                {application.hiringManager.email}
-              </p>
-            </div>
+              {hiringManagers.map((manager) => (
+                <option key={manager._id} value={manager._id}>
+                  {manager.firstName} {manager.lastName}
+                </option>
+              ))}
+            </select>
+
+            {selectedHiringManager && (
+              <button
+                onClick={() =>
+                  assignHiringManagerMutation.mutate({
+                    applicationId: application._id,
+                    hiringManagerId: selectedHiringManager,
+                  })
+                }
+                disabled={assignHiringManagerMutation.isPending}
+                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {assignHiringManagerMutation.isPending
+                  ? "Assigning..."
+                  : "Assign"}
+              </button>
+            )}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">
-            No hiring manager assigned.
-          </p>
+          <div className="mt-5">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <select
+                value={selectedHiringManager}
+                onChange={(e) => setSelectedHiringManager(e.target.value)}
+                disabled={
+                  isHiringManagersLoading ||
+                  assignHiringManagerMutation.isPending
+                }
+                className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-white outline-none focus:border-indigo-500"
+              >
+                <option value="">
+                  {isHiringManagersLoading
+                    ? "Loading hiring managers..."
+                    : "Select hiring manager"}
+                </option>
+
+                {hiringManagers.map((manager) => (
+                  <option key={manager._id} value={manager._id}>
+                    {manager.firstName} {manager.lastName} — {manager.email}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() =>
+                  assignHiringManagerMutation.mutate({
+                    applicationId: application._id,
+                    hiringManagerId: selectedHiringManager,
+                  })
+                }
+                disabled={
+                  !selectedHiringManager ||
+                  assignHiringManagerMutation.isPending
+                }
+                className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {assignHiringManagerMutation.isPending
+                  ? "Assigning..."
+                  : "Assign"}
+              </button>
+            </div>
+          </div>
         )}
       </section>
 

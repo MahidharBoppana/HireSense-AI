@@ -4,7 +4,6 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import fs from "fs/promises";
 
-
 import extractTextFromPdf from "../services/pdfParser.service.js";
 import extractTextFromDocx from "../services/docxParser.service.js";
 import parseResume from "../services/resumeParser.service.js";
@@ -82,6 +81,7 @@ const uploadResume = asyncHandler(async (req, res) => {
       {
         resumeUrl: result.secure_url,
         resumePublicId: result.public_id,
+        resumeResourceType: result.resource_type,
         format: result.format,
       },
       "Resume uploaded successfully",
