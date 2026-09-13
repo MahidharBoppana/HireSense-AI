@@ -23,9 +23,9 @@ const seedSuperAdmin = async () => {
 
     await User.create({
       firstName: process.env.SUPER_ADMIN_FIRST_NAME,
-      lastName: SUPER_ADMIN_LAST_NAME,
-      email: SUPER_ADMIN_EMAIL,
-      password: SUPER_ADMIN_PASSWORD,
+      lastName: process.env.SUPER_ADMIN_LAST_NAME,
+      email: process.env.SUPER_ADMIN_EMAIL,
+      password: process.env.SUPER_ADMIN_PASSWORD,
       role: "super_admin",
       isActive: true,
     });
