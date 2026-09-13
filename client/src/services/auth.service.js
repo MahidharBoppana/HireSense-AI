@@ -6,6 +6,25 @@ export const login = async (data) => {
   return response.data;
 };
 
+export const updatePassword = async (data) => {
+  const response = await api.patch("/auth/update-password", data);
+
+  return response.data;
+};
+
+export const forgotPassword = async (data) => {
+  const response = await api.post("/auth/forgot-password", data);
+  return response.data;
+};
+
+export const resetPassword = async (data) => {
+  const response = await api.post(`/auth/reset-password/${data.token}`, {
+    newPassword: data.newPassword,
+  });
+
+  return response.data;
+};
+
 export const logout = async () => {
   const response = await api.post("/auth/logout");
 

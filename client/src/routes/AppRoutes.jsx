@@ -1,11 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../pages/auth/Login";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 import SuperAdminDashboard from "../pages/super-admin/Dashboard";
 import AdminDashboard from "../pages/admin/Dashboard";
 import RecruiterDashboard from "../pages/recruiter/Dashboard";
 import HiringManagerDashboard from "../pages/hiring-manager/HiringManagerDashboard.jsx";
+import UpdatePassword from "../pages/profile/UpdatePassword";
 
 import NotFound from "../pages/shared/NotFound";
 import Unauthorized from "../pages/shared/Unauthorized";
@@ -15,11 +18,12 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 // Super Admin
 import Admins from "../pages/super-admin/Admins";
-import Monitoring from "../pages/super-admin/Monitoring";
+import SuperAdminAnalytics from "../pages/super-admin/SuperAdminAnalytics";
 
 // Admin
 import Recruiters from "../pages/admin/Recruiters";
 import HiringManagers from "../pages/admin/HiringManagers";
+import AdminAnalytics from "../pages/admin/AdminAnalytics";
 
 // Recruiter
 import RecruiterJobs from "../pages/recruiter/Jobs";
@@ -28,10 +32,12 @@ import RecruiterCandidates from "../pages/recruiter/Candidates.jsx";
 import CandidateDetails from "../pages/recruiter/CandidateDetails";
 import CandidateEdit from "../pages/recruiter/CandidateEdit";
 import ApplicationDetails from "../pages/recruiter/ApplicationDetails";
+import RecruiterAnalytics from "../pages/recruiter/RecruiterAnalytics";
 
 // Hiring Manager
 import HiringManagerApplications from "../pages/hiring-manager/HiringManagerApplications";
 import HiringManagerApplicationDetails from "../pages/hiring-manager/HiringManagerApplicationDetails";
+import HiringManagerAnalytics from "../pages/hiring-manager/HiringManagerAnalytics";
 
 function AppRoutes() {
   return (
@@ -43,7 +49,32 @@ function AppRoutes() {
 
         <Route path="/" element={<Login />} />
 
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
         <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* =====================================================
+            Protected Routes
+        ===================================================== */}
+
+        <Route
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "super_admin",
+                "admin",
+                "recruiter",
+                "hiring_manager",
+              ]}
+            />
+          }
+        >
+          <Route element={<DashboardLayout />}>
+            <Route path="/profile/password" element={<UpdatePassword />} />
+          </Route>
+        </Route>
 
         {/* =====================================================
             Super Admin
@@ -58,7 +89,10 @@ function AppRoutes() {
 
             <Route path="/super-admin/admins" element={<Admins />} />
 
-            <Route path="/super-admin/monitoring" element={<Monitoring />} />
+            <Route
+              path="/super-admin/analytics"
+              element={<SuperAdminAnalytics />}
+            />
           </Route>
         </Route>
 
@@ -73,6 +107,8 @@ function AppRoutes() {
             <Route path="/admin/recruiters" element={<Recruiters />} />
 
             <Route path="/admin/hiring-managers" element={<HiringManagers />} />
+
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
           </Route>
         </Route>
 
@@ -114,6 +150,11 @@ function AppRoutes() {
               path="/recruiter/applications/:id"
               element={<ApplicationDetails />}
             />
+
+            <Route
+              path="/recruiter/analytics"
+              element={<RecruiterAnalytics />}
+            />
           </Route>
         </Route>
 
@@ -136,6 +177,10 @@ function AppRoutes() {
             <Route
               path="/hiring-manager/applications/:id"
               element={<HiringManagerApplicationDetails />}
+            />
+            <Route
+              path="/hiring-manager/analytics"
+              element={<HiringManagerAnalytics />}
             />
           </Route>
         </Route>

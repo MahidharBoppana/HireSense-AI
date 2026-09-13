@@ -2,11 +2,12 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { login } from "../../services/auth.service";
 import { useAuth } from "../../context/AuthContext";
+import { useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -18,6 +19,8 @@ function Login() {
   const navigate = useNavigate();
 
   const { setUser } = useAuth();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -117,7 +120,6 @@ function Login() {
             </div>
 
             {/* Password */}
-
             <div>
               <label
                 htmlFor="password"
@@ -126,20 +128,88 @@ function Login() {
                 Password
               </label>
 
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                {...register("password")}
-                disabled={loginMutation.isPending}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  {...register("password")}
+                  disabled={loginMutation.isPending}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-3 pr-12 text-white outline-none transition placeholder:text-slate-500 focus:border-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={loginMutation.isPending}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-300 disabled:cursor-not-allowed"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.8}
+                      stroke="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.036 12.322a1.012 1.012 0 010-.644C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.01 9.964 7.178.07.21.07.434 0 .644C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.01-9.964-7.178z"
+                      />
+
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.8}
+                      stroke="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.16 7.16 19.5 12 19.5c4.84 0 8.774-3.34 10.066-7.5a10.477 10.477 0 00-2.046-3.777"
+                      />
+
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6.228 6.228A10.45 10.45 0 0112 4.5c4.84 0 8.774 3.34 10.066 7.5a10.45 10.45 0 01-4.132 5.472"
+                      />
+
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 3l18 18"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
 
               {errors.password && (
                 <p className="mt-1 text-sm text-red-400">
                   {errors.password.message}
                 </p>
               )}
+            </div>
+            <div className="flex justify-end mt-2">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-indigo-400 hover:text-indigo-300 transition"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             {/* Submit */}

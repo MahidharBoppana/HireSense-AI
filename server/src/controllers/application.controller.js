@@ -8,6 +8,7 @@ import Candidate from "../models/Candidate.model.js";
 import Job from "../models/Job.model.js";
 import screenCandidate from "../services/aiScreening.service.js";
 import rankApplications from "../services/aiRanking.service.js";
+import { createNotification } from "../services/notification.service.js";
 
 const createApplication = asyncHandler(async (req, res) => {
   const { candidate, job } = req.body;
@@ -71,6 +72,17 @@ const createApplication = asyncHandler(async (req, res) => {
     updatedBy: req.user._id,
   });
 
+  if (jobExists.hiringManager) {
+    await createNotification({
+      recipient: jobExists.hiringManager,
+      type: "application_created",
+      title: "New Candidate Application",
+      message: `${candidateExists.fullName} has applied for ${jobExists.title}.`,
+      relatedApplication: application._id,
+      relatedJob: jobExists._id,
+      relatedCandidate: candidateExists._id,
+    });
+  }
   await rankApplications(jobExists._id);
 
   const populatedApplication = await Application.findById(application._id)
@@ -217,6 +229,16 @@ const assignHiringManager = asyncHandler(async (req, res) => {
 
   await application.save();
 
+  await createNotification({
+    recipient: hiringManager._id,
+    type: "job_assigned",
+    title: "Application Assigned",
+    message: `You have been assigned ${candidate.fullName} for ${job.title}.`,
+    relatedApplication: application._id,
+    relatedJob: job._id,
+    relatedCandidate: candidate._id,
+  });
+
   const job = await Job.findById(application.job);
 
   if (job) {
@@ -255,6 +277,18 @@ const addInterviewNotes = asyncHandler(async (req, res) => {
   application.reviewedAt = new Date();
 
   await application.save();
+
+  const candidate = await Candidate.findById(application.candidate);
+
+  await createNotification({
+    recipient: application.recruiter,
+    type: "interview_feedback",
+    title: "Interview Feedback Added",
+    message: `Interview feedback has been added for ${candidate.fullName}.`,
+    relatedApplication: application._id,
+    relatedJob: application.job,
+    relatedCandidate: application.candidate,
+  });
 
   return res
     .status(200)
@@ -340,6 +374,45 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   application.updatedBy = req.user._id;
 
   await application.save();
+
+  const candidate = await Candidate.findById(application.candidate);
+  const job = await Job.findById(application.job);
+
+  if (application.hiringManager && status === "shortlisted") {
+    await createNotification({
+      recipient: application.hiringManager,
+      type: "application_shortlisted",
+      title: "Candidate Shortlisted",
+      message: `${candidate?.fullName || "A candidate"} has been shortlisted for ${job?.title || "a job"}.`,
+      relatedApplication: application._id,
+      relatedJob: application.job,
+      relatedCandidate: application.candidate,
+    });
+  }
+
+  if (application.hiringManager && status === "rejected") {
+    await createNotification({
+      recipient: application.hiringManager,
+      type: "application_rejected",
+      title: "Application Rejected",
+      message: `${candidate?.fullName || "A candidate"} was rejected for ${job?.title || "a job"}.`,
+      relatedApplication: application._id,
+      relatedJob: application.job,
+      relatedCandidate: application.candidate,
+    });
+  }
+
+  if (req.user.role === "hiring_manager" && status === "interview") {
+    await createNotification({
+      recipient: application.recruiter,
+      type: "interview_scheduled",
+      title: "Candidate Moved to Interview",
+      message: `${candidate?.fullName || "A candidate"} has been moved to the interview stage for ${job?.title || "a job"}.`,
+      relatedApplication: application._id,
+      relatedJob: application.job,
+      relatedCandidate: application.candidate,
+    });
+  }
 
   const populatedApplication = await Application.findById(application._id)
     .populate("candidate")
@@ -484,6 +557,33 @@ const finalizeApplication = asyncHandler(async (req, res) => {
   application.reviewedAt = new Date();
 
   await application.save();
+
+  const candidate = await Candidate.findById(application.candidate);
+  const job = await Job.findById(application.job);
+
+  if (status === "hired") {
+    await createNotification({
+      recipient: application.recruiter,
+      type: "candidate_hired",
+      title: "Candidate Hired",
+      message: `${candidate?.fullName || "A candidate"} has been hired for ${job?.title || "a job"}.`,
+      relatedApplication: application._id,
+      relatedJob: application.job,
+      relatedCandidate: application.candidate,
+    });
+  }
+
+  if (status === "rejected") {
+    await createNotification({
+      recipient: application.recruiter,
+      type: "candidate_rejected",
+      title: "Candidate Rejected",
+      message: `${candidate?.fullName || "A candidate"} was rejected after the interview process.`,
+      relatedApplication: application._id,
+      relatedJob: application.job,
+      relatedCandidate: application.candidate,
+    });
+  }
 
   return res
     .status(200)

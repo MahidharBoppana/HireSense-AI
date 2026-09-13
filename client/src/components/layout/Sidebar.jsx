@@ -18,8 +18,8 @@ function Sidebar() {
         path: "/super-admin/admins",
       },
       {
-        name: "Platform Monitoring",
-        path: "/super-admin/monitoring",
+        name: "Analytics",
+        path: "/super-admin/analytics",
       },
     ],
 
@@ -36,6 +36,10 @@ function Sidebar() {
         name: "Hiring Managers",
         path: "/admin/hiring-managers",
       },
+      {
+        name: "Analytics",
+        path: "/admin/analytics",
+      },
     ],
 
     recruiter: [
@@ -51,6 +55,10 @@ function Sidebar() {
         name: "Candidates",
         path: "/recruiter/candidates",
       },
+      {
+        name: "Analytics",
+        path: "/recruiter/analytics",
+      },
     ],
 
     hiring_manager: [
@@ -61,6 +69,10 @@ function Sidebar() {
       {
         name: "Applications",
         path: "/hiring-manager/applications",
+      },
+      {
+        name: "Analytics",
+        path: "/hiring-manager/analytics",
       },
     ],
   };

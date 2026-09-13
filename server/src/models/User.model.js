@@ -40,6 +40,16 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
     },
+    resetPasswordToken: {
+      type: String,
+      default: undefined,
+      select: false,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: undefined,
+      select: false,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
