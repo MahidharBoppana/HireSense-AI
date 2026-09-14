@@ -32,6 +32,7 @@
     "multer": "^2.2.0",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^6.3.289",
+    "resend": "^6.28.0",
     "streamifier": "^0.1.1"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ import generateAccessAndRefreshTokens from "../services/auth.service.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { sendPasswordResetEmail } from "../services/email.service.js";
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -142,8 +143,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-  // Temporary until email service is connected
-  console.log("PASSWORD RESET URL:", resetUrl);
+  await sendPasswordResetEmail({
+    email: user.email,
+    resetUrl,
+  });
 
   return res
     .status(200)
