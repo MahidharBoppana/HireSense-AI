@@ -3,6 +3,9 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async ({ to, subject, html }) => {
+  console.log("📧 Sending email to:", to);
+  console.log("📧 Resend configured:", Boolean(process.env.RESEND_API_KEY));
+
   if (!process.env.RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not configured");
   }
@@ -14,8 +17,10 @@ const sendEmail = async ({ to, subject, html }) => {
     html,
   });
 
+  console.log("📧 Resend response:", data);
+  console.log("📧 Resend error:", error);
+
   if (error) {
-    console.error("Email sending failed:", error);
     throw new Error(error.message || "Failed to send email");
   }
 
