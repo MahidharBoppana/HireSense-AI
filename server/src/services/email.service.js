@@ -1,34 +1,16 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const sendEmail = async ({ to, subject, html }) => {
-  console.log("📧 Sending email to:", to);
-  console.log("📧 Resend configured:", Boolean(process.env.RESEND_API_KEY));
-
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
-
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM,
-    to,
-    subject,
-    html,
-  });
-
-  console.log("📧 Resend response:", data);
-  console.log("📧 Resend error:", error);
-
-  if (error) {
-    throw new Error(error.message || "Failed to send email");
-  }
-
-  return data;
-};
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_APP_PASSWORD,
+  },
+});
 
 export const sendPasswordResetEmail = async ({ email, resetUrl }) => {
-  return sendEmail({
+  const info = await transporter.sendMail({
+    from: `"HireSense AI" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Reset your HireSense AI password",
     html: `
@@ -65,9 +47,13 @@ export const sendPasswordResetEmail = async ({ email, resetUrl }) => {
         </p>
 
         <p style="color: #666;">
-          If you did not request a password reset, you can safely ignore this email.
+          If you did not request this password reset, you can safely ignore this email.
         </p>
       </div>
     `,
   });
+
+  console.log("📧 Email sent:", info.messageId);
+
+  return info;
 };
