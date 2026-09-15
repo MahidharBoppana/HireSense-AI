@@ -224,22 +224,14 @@ const assignHiringManager = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Hiring manager not found");
   }
 
+  const candidate = await Candidate.findById(application.candidate);
+
+  const job = await Job.findById(application.job);
+
   application.hiringManager = hiringManager._id;
   application.updatedBy = req.user._id;
 
   await application.save();
-
-  await createNotification({
-    recipient: hiringManager._id,
-    type: "job_assigned",
-    title: "Application Assigned",
-    message: `You have been assigned ${candidate.fullName} for ${job.title}.`,
-    relatedApplication: application._id,
-    relatedJob: job._id,
-    relatedCandidate: candidate._id,
-  });
-
-  const job = await Job.findById(application.job);
 
   if (job) {
     job.hiringManager = hiringManager._id;
@@ -247,6 +239,16 @@ const assignHiringManager = asyncHandler(async (req, res) => {
 
     await job.save();
   }
+
+  await createNotification({
+    recipient: hiringManager._id,
+    type: "job_assigned",
+    title: "Application Assigned",
+    message: `You have been assigned ${candidate?.fullName || "a candidate"} for ${job?.title || "a job"}.`,
+    relatedApplication: application._id,
+    relatedJob: application.job,
+    relatedCandidate: application.candidate,
+  });
 
   return res
     .status(200)
